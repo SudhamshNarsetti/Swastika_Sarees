@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useCartStore } from '../store/cartStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainer, fadeInUp } from '../utils/animations';
 
 export default function WishlistPage() {
   const { wishlist, toggleWishlist } = useWishlistStore();
@@ -27,7 +29,11 @@ export default function WishlistPage() {
 
   if (wishlist.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center select-none flex flex-col items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-7xl mx-auto px-4 py-20 text-center select-none flex flex-col items-center"
+      >
         <div className="p-4 bg-brand-crimson/10 text-brand-crimson rounded-full mb-6">
           <Heart size={48} />
         </div>
@@ -41,7 +47,7 @@ export default function WishlistPage() {
         >
           Explore Catalog
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
@@ -49,12 +55,23 @@ export default function WishlistPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-left select-none">
       <h1 className="font-display font-bold text-brand-dark text-2xl sm:text-3xl mb-8">My Wishlist</h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      <motion.div 
+        initial="initial"
+        animate="whileInView"
+        variants={staggerContainer}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
+      >
+        <AnimatePresence>
         {wishlist.map((prod) => {
           const primaryImage = prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=300';
           const currentPrice = prod.price / 100;
           return (
-            <div
+            <motion.div
+              variants={fadeInUp}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               key={prod._id}
               className="bg-brand-white border border-brand-border/40 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between"
             >
@@ -83,10 +100,11 @@ export default function WishlistPage() {
                   <span>Move to Cart</span>
                 </button>
               </div>
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Truck, ShoppingBag, CreditCard, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
@@ -15,7 +16,7 @@ const INDIAN_STATES = [
 export default function Checkout() {
   const navigate = useNavigate();
   const { cart, appliedCoupon, getSubtotal, getCouponDiscount, getShippingCharge, getTotal, clearCart } = useCartStore();
-  const { user, token, addAddress } = useAuthStore();
+  const { user, token, loading, addAddress } = useAuthStore();
 
   const [step, setStep] = useState(1);
   const [settings, setSettings] = useState(null);
@@ -61,8 +62,14 @@ export default function Checkout() {
     // Redirect to home if cart is empty
     if (cart.length === 0) {
       navigate('/cart');
+      return;
     }
-  }, [cart, navigate]);
+    
+    // Check if user is not authenticated after initial load
+    if (!user && !loading) {
+      navigate('/login?redirect=/checkout');
+    }
+  }, [cart, user, loading, navigate]);
 
   // Load user profile details if logged in
   useEffect(() => {
@@ -409,10 +416,18 @@ export default function Checkout() {
         
         {/* Left Side forms */}
         <div className="flex-1">
-          
+          <AnimatePresence mode="wait">
+            
           {/* STEP 1: Delivery Address */}
           {step === 1 && (
-            <div className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6">
+            <motion.div 
+              key="step1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6"
+            >
               <h2 className="font-display font-bold text-brand-dark text-xl flex items-center space-x-2 border-b pb-3 border-brand-border/40">
                 <Truck size={20} className="text-brand-gold shrink-0 mt-0.5" />
                 <span>Shipping Address</span>
@@ -547,12 +562,19 @@ export default function Checkout() {
                 Proceed to Review Order
               </button>
 
-            </div>
+            </motion.div>
           )}
 
           {/* STEP 2: Order Review */}
           {step === 2 && (
-            <div className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6">
+            <motion.div 
+              key="step2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6"
+            >
               <h2 className="font-display font-bold text-brand-dark text-xl flex items-center space-x-2 border-b pb-3 border-brand-border/40">
                 <ShoppingBag size={20} className="text-brand-gold shrink-0 mt-0.5" />
                 <span>Review Order Details</span>
@@ -597,12 +619,19 @@ export default function Checkout() {
                 </button>
               </div>
 
-            </div>
+            </motion.div>
           )}
 
           {/* STEP 3: Secure Payment options */}
           {step === 3 && (
-            <div className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6">
+            <motion.div 
+              key="step3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-brand-white border border-brand-border/40 p-6 rounded-2xl shadow-xs space-y-6"
+            >
               <h2 className="font-display font-bold text-brand-dark text-xl flex items-center space-x-2 border-b pb-3 border-brand-border/40">
                 <CreditCard size={20} className="text-brand-gold shrink-0 mt-0.5" />
                 <span>Select Payment Method</span>
@@ -677,9 +706,10 @@ export default function Checkout() {
                 </button>
               </div>
 
-            </div>
+            </motion.div>
           )}
 
+          </AnimatePresence>
         </div>
 
         {/* Right Side Order calculations */}

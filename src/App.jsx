@@ -39,8 +39,60 @@ function ScrollToTop() {
   return null;
 }
 
+import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion';
+import { pageTransition } from './utils/animations';
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.main
+        key={location.pathname}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={pageTransition}
+        className="flex-grow"
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+          <Route path="/orders" element={<OrdersHistory />} />
+          <Route path="/orders/:orderId" element={<OrderDetail />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/returns" element={<ReturnsPolicy />} />
+          <Route path="/shipping" element={<ShippingPolicy />} />
+          
+          {/* Admin CMS Route */}
+          <Route path="/admin" element={<Admin />} />
+
+          {/* Fallback 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </motion.main>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   const { initialize } = useAuthStore();
+  
+  // Scroll Progress logic
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   useEffect(() => {
     // Restore auth state on startup
@@ -51,8 +103,16 @@ export default function App() {
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
       
-      {/* Dynamic Store Layout Wrapper */}
-      <div className="flex flex-col min-h-screen bg-brand-cream/15 font-sans">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="scroll-progress-bar"
+        style={{ scaleX }}
+      />
+      
+      {/* Dynamic Store Layout Wrapper with Ambient Glow */}
+      <div className="flex flex-col min-h-screen bg-brand-cream/15 font-sans relative overflow-hidden">
+        {/* Ambient background that moves softly */}
+        <div className="absolute inset-0 ambient-glow-bg pointer-events-none" />
         
         {/* Global Announcement bar */}
         <AnnouncementBar />
@@ -61,32 +121,7 @@ export default function App() {
         <Navbar />
 
         {/* Storefront Main View Routing */}
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/product/:slug" element={<ProductDetail />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-            <Route path="/orders" element={<OrdersHistory />} />
-            <Route path="/orders/:orderId" element={<OrderDetail />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/track-order" element={<TrackOrder />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/returns" element={<ReturnsPolicy />} />
-            <Route path="/shipping" element={<ShippingPolicy />} />
-            
-            {/* Admin CMS Route */}
-            <Route path="/admin" element={<Admin />} />
-
-            {/* Fallback 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
+        <AnimatedRoutes />
 
 
         {/* Global Foot Block */}

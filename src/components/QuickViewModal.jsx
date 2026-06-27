@@ -3,6 +3,7 @@ import { X, Heart, ShoppingBag, Plus, Minus, ChevronDown, ArrowRight, AlertTrian
 import { Link } from "react-router-dom";
 import { useCartStore } from "../store/cartStore";
 import { useWishlistStore } from "../store/wishlistStore";
+import { motion } from "framer-motion";
 
 export default function QuickViewModal({ product, onClose }) {
   const { addItem } = useCartStore();
@@ -84,11 +85,21 @@ export default function QuickViewModal({ product, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4" 
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+    >
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Scrollable modal shell */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
         ref={scrollContainerRef}
         className="relative w-full h-full sm:h-[95vh] sm:max-w-2xl md:max-w-3xl overflow-y-auto rounded-none sm:rounded-3xl shadow-2xl z-10"
         style={{ scrollbarWidth: "none", scrollBehavior: "smooth" }}
@@ -266,7 +277,7 @@ export default function QuickViewModal({ product, onClose }) {
             <ArrowRight size={13} />
           </Link>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

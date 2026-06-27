@@ -94,22 +94,28 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 // DELETE category (Admin)
 router.delete('/:id', requireAdmin, async (req, res) => {
+  console.log('[DELETE /categories/:id] Request received for ID:', req.params.id);
   try {
     const catId = req.params.id;
 
     // Check if category has products
     const productsCount = await Product.countDocuments({ category: catId });
+    console.log('[DELETE /categories/:id] Products count for category:', productsCount);
     if (productsCount > 0) {
+      console.log('[DELETE /categories/:id] Cannot delete category with active products');
       return res.status(400).json({ error: `Cannot delete category. It is assigned to ${productsCount} products.` });
     }
 
     const category = await Category.findByIdAndDelete(catId);
     if (!category) {
+      console.log('[DELETE /categories/:id] Category not found:', catId);
       return res.status(404).json({ error: 'Category not found' });
     }
 
+    console.log('[DELETE /categories/:id] Category deleted successfully:', catId);
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
+    console.error('[DELETE /categories/:id] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

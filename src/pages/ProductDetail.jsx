@@ -4,6 +4,8 @@ import { Heart, ShoppingBag, Send, ShieldAlert, Star, MessageSquare, Truck, Chec
 import { useCartStore } from '../store/cartStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import ProductCard from '../components/ProductCard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainer, fadeInUp, scaleUp } from '../utils/animations';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -250,10 +252,15 @@ export default function ProductDetail() {
       </nav>
 
       {/* Main Details Panel */}
-      <div className="flex flex-col lg:flex-row gap-10 border-b border-brand-border/40 pb-16">
+      <motion.div 
+        initial="initial"
+        animate="whileInView"
+        variants={staggerContainer}
+        className="flex flex-col lg:flex-row gap-10 border-b border-brand-border/40 pb-16"
+      >
         
         {/* Column 1: Images Gallery */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center">
+        <motion.div variants={fadeInUp} className="w-full lg:w-1/2 flex flex-col items-center">
           <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden bg-brand-cream border border-brand-border/40 shadow-xs relative select-none">
             
             {/* Primary Zoom image (CSS hover transition) */}
@@ -291,10 +298,10 @@ export default function ProductDetail() {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Column 2: Buy details */}
-        <div className="w-full lg:w-1/2 text-left flex flex-col">
+        <motion.div variants={fadeInUp} className="w-full lg:w-1/2 text-left flex flex-col">
           
           <span className="text-xs font-bold text-brand-gold uppercase tracking-wider mb-2 font-sans select-none">
             {product.category?.name}
@@ -527,9 +534,9 @@ export default function ProductDetail() {
             🎁 Use code <strong>FIRST10</strong> for 10% off | Free shipping above ₹999
           </div>
 
-        </div>
+        </motion.div>
 
-      </div>
+      </motion.div>
 
       {/* Tabs Section */}
       <section ref={reviewsTabRef} className="mt-16 text-left select-none">
@@ -560,10 +567,18 @@ export default function ProductDetail() {
         </div>
 
         {/* Tab Contents */}
-        <div className="py-8 font-sans text-xs sm:text-sm text-brand-dark leading-relaxed">
-          
-          {/* Tab 1: Description */}
-          {activeTab === 'description' && (
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="py-8 font-sans text-xs sm:text-sm text-brand-dark leading-relaxed"
+          >
+            
+            {/* Tab 1: Description */}
+            {activeTab === 'description' && (
             <div className="space-y-6">
               <div
                 className="prose prose-sm max-w-none text-brand-dark"
@@ -746,43 +761,58 @@ export default function ProductDetail() {
             </div>
           )}
 
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {/* You may also like list */}
       {relatedProducts.length > 0 && (
-        <section className="mt-20">
+        <motion.section 
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="mt-20"
+        >
           <div className="flex justify-between items-end border-b border-brand-border/30 pb-3 mb-8">
-            <h2 className="font-display text-xl sm:text-2xl text-brand-dark font-bold text-left">You May Also Like</h2>
+            <motion.h2 variants={fadeInUp} className="font-display text-xl sm:text-2xl text-brand-dark font-bold text-left">You May Also Like</motion.h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {relatedProducts.map(prod => (
-              <ProductCard
-                key={prod._id}
-                product={prod}
-                onQuickView={() => {}}
-              />
+              <motion.div variants={fadeInUp} key={prod._id}>
+                <ProductCard
+                  product={prod}
+                  onQuickView={() => {}}
+                />
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* Recently Viewed */}
       {recentlyViewed.length > 0 && (
-        <section className="mt-20">
+        <motion.section 
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="mt-20"
+        >
           <div className="flex justify-between items-end border-b border-brand-border/30 pb-3 mb-8">
-            <h2 className="font-display text-xl sm:text-2xl text-brand-dark font-bold text-left">Recently Viewed</h2>
+            <motion.h2 variants={fadeInUp} className="font-display text-xl sm:text-2xl text-brand-dark font-bold text-left">Recently Viewed</motion.h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {recentlyViewed.slice(0, 4).map(prod => (
-              <ProductCard
-                key={prod._id}
-                product={prod}
-                onQuickView={() => {}}
-              />
+              <motion.div variants={fadeInUp} key={prod._id}>
+                <ProductCard
+                  product={prod}
+                  onQuickView={() => {}}
+                />
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
 
     </div>

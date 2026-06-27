@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Eye, ShoppingCart } from 'lucide-react';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useCartStore } from '../store/cartStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProductCard({ product, onQuickView }) {
   const { toggleWishlist, isInWishlist } = useWishlistStore();
@@ -50,8 +51,10 @@ export default function ProductCard({ product, onQuickView }) {
   };
 
   return (
-    <div
-      className="group relative bg-brand-white border border-brand-border/40 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col h-full"
+    <motion.div
+      whileHover={{ y: -8, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } }}
+      whileTap={{ scale: 0.98 }}
+      className="group relative bg-brand-white border border-brand-border/30 rounded-xl overflow-hidden shadow-xs hover:shadow-[0_20px_40px_rgba(200,131,42,0.12)] transition-shadow duration-500 flex flex-col h-full"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -66,78 +69,102 @@ export default function ProductCard({ product, onQuickView }) {
             e.stopPropagation();
             toggleWishlist(product);
           }}
-          className={`absolute top-3 right-3 p-2 rounded-full shadow-md z-10 transition-transform duration-200 hover:scale-110 bg-brand-white/95 ${
+          className={`absolute top-3.5 right-3.5 p-2 rounded-full shadow-md z-30 transition-all duration-500 hover:scale-110 bg-brand-white/95 border border-brand-border/20 ${
             isSaved ? 'text-brand-crimson' : 'text-brand-muted hover:text-brand-crimson'
           }`}
           aria-label="Toggle Wishlist"
         >
-          <Heart size={16} fill={isSaved ? "currentColor" : "none"} />
+          <motion.div 
+            whileHover={{ rotate: isSaved ? 0 : [0, -15, 15, -15, 15, 0], transition: { duration: 0.6 } }}
+            whileTap={{ scale: 0.8 }} 
+            animate={isSaved ? { scale: [1, 1.3, 1] } : {}}
+          >
+            <Heart size={15} fill={isSaved ? "currentColor" : "none"} className="transition-colors duration-300" />
+          </motion.div>
         </button>
 
         {/* Status Badges (Top-Left) */}
-        <div className="absolute top-3 left-3 flex flex-col space-y-1.5 z-20 select-none">
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="absolute top-3.5 left-3.5 flex flex-col space-y-1.5 z-20 select-none"
+        >
           {product.isNewArrival && (
-            <span className="bg-brand-gold text-brand-cream text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-brand-gold text-brand-cream text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-sm shadow-xs border border-brand-gold/10">
               NEW
             </span>
           )}
           {product.isBestseller && (
-            <span className="bg-brand-crimson text-brand-cream text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-brand-crimson text-brand-cream text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-sm shadow-xs border border-brand-crimson/10">
               BESTSELLER
             </span>
           )}
           {discountPercent > 0 && (
-            <span className="bg-emerald-600 text-brand-cream text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-brand-dark text-brand-cream text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-sm shadow-xs border border-brand-dark/10">
               SALE
             </span>
           )}
-        </div>
+        </motion.div>
 
-        {/* Hover Swap Gallery Container */}
-        <Link to={`/product/${product.slug}`} className="block h-full w-full">
+        {/* Hover Swap Gallery Container (Smooth crossfade) */}
+        <Link to={`/product/${product.slug}`} className="block h-full w-full relative">
           <img
-            src={hovered ? secondaryImage : primaryImage}
+            src={primaryImage}
             alt={product.name}
-            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
             loading="lazy"
           />
+          {secondaryImage !== primaryImage && (
+            <img
+              src={secondaryImage}
+              alt={product.name}
+              className={`absolute inset-0 h-full w-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
+                hovered ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+            />
+          )}
         </Link>
 
         {/* Out Of Stock Translucent White Window Overlay & Centered Badge */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-white/40 z-10 select-none flex items-center justify-center pointer-events-none">
-            <span className="bg-white/90 backdrop-blur-xs text-brand-dark text-[10px] sm:text-xs font-bold tracking-widest uppercase px-3.5 py-2 rounded-full border border-white/20 shadow-md">
+            <span className="bg-white/90 backdrop-blur-xs text-brand-dark text-[9px] sm:text-2xs font-bold tracking-widest uppercase px-3.5 py-2.5 rounded-full border border-white/20 shadow-md">
               OUT OF STOCK
             </span>
           </div>
         )}
 
         {/* Hover Action Row (Quick View & Add to Cart) */}
-        <div className="absolute bottom-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-t from-brand-dark/50 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20 select-none">
+        <div className="absolute bottom-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-t from-brand-dark/80 via-brand-dark/40 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.25,0.46,0.45,0.94] z-20 select-none">
           {isOutOfStock ? (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => onQuickView(product)}
-              className="mx-auto flex items-center space-x-1 bg-brand-white hover:bg-brand-cream text-brand-dark px-4 py-2 rounded-md text-xs font-medium transition-colors shadow-md"
+              className="mx-auto flex items-center space-x-1.5 bg-brand-white hover:bg-brand-cream text-brand-dark px-4 py-2 rounded text-xs font-semibold tracking-wide transition-colors shadow-md"
             >
               <Eye size={12} />
               <span>Quick View</span>
-            </button>
+            </motion.button>
           ) : (
             <>
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={() => onQuickView(product)}
-                className="flex items-center space-x-1 bg-brand-white hover:bg-brand-cream text-brand-dark px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-md"
+                className="flex items-center space-x-1.5 bg-brand-white/90 backdrop-blur-sm hover:bg-brand-white text-brand-dark px-3 py-2 rounded text-xs font-semibold tracking-wide transition-colors shadow-md"
               >
                 <Eye size={12} />
                 <span>Quick View</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={handleAddToCart}
-                className="flex items-center space-x-1 bg-brand-crimson hover:bg-brand-muted text-brand-cream px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-md border border-brand-gold/25"
+                className="flex items-center space-x-1.5 bg-brand-crimson hover:bg-brand-gold hover:text-brand-dark text-brand-cream px-3 py-2 rounded text-xs font-semibold tracking-wide transition-all duration-300 shadow-[0_0_10px_rgba(139,26,26,0.5)] border border-brand-gold/25"
               >
                 <ShoppingCart size={12} />
                 <span>Add to Cart</span>
-              </button>
+              </motion.button>
             </>
           )}
         </div>
@@ -145,13 +172,13 @@ export default function ProductCard({ product, onQuickView }) {
       </div>
 
       {/* Info Block */}
-      <div className="p-4 flex flex-col flex-grow text-left">
-        <span className="text-[10px] font-sans text-brand-gold uppercase tracking-wider font-semibold mb-1">
+      <div className="p-4 flex flex-col flex-grow text-left bg-brand-white">
+        <span className="text-[9px] font-sans text-brand-gold uppercase tracking-widest font-bold mb-1 block">
           {product.category?.name || 'Ethnic Wear'}
         </span>
         
         <Link to={`/product/${product.slug}`} className="flex-grow">
-          <h4 className="font-display font-semibold text-brand-dark text-sm sm:text-base leading-snug line-clamp-2 hover:text-brand-crimson transition-colors duration-200">
+          <h4 className="font-display font-semibold text-brand-dark text-sm leading-snug line-clamp-2 hover:text-brand-crimson transition-colors duration-300">
             {product.name}
           </h4>
         </Link>
@@ -174,7 +201,7 @@ export default function ProductCard({ product, onQuickView }) {
         )}
 
         {/* Price Row */}
-        <div className="flex items-center space-x-2 mt-2 select-none">
+        <div className={`flex items-center space-x-2 mt-2 select-none transition-opacity duration-500 ${hovered ? 'opacity-50' : 'opacity-100'}`}>
           <span className="font-sans font-bold text-brand-crimson text-sm sm:text-base">
             ₹{currentPrice.toLocaleString('en-IN')}
           </span>
@@ -183,7 +210,7 @@ export default function ProductCard({ product, onQuickView }) {
               <span className="font-sans text-xs text-brand-muted line-through">
                 ₹{originalPrice.toLocaleString('en-IN')}
               </span>
-              <span className="bg-brand-gold/10 text-brand-gold px-1.5 py-0.5 rounded-sm font-sans text-[10px] font-semibold">
+              <span className="border border-brand-gold/20 bg-brand-gold/5 text-brand-gold px-1.5 py-0.5 rounded-sm font-sans text-[9px] font-bold">
                 {discountPercent}% OFF
               </span>
             </>
@@ -192,6 +219,6 @@ export default function ProductCard({ product, onQuickView }) {
 
       </div>
 
-    </div>
+    </motion.div>
   );
 }

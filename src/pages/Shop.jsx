@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid, List, RotateCcw, X, Star, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainer, fadeInUp, scaleUp } from '../utils/animations';
 
 const FABRICS = ['Silk', 'Cotton', 'Chiffon', 'Georgette', 'Net', 'Linen', 'Organza', 'Crepe'];
 const SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
@@ -498,27 +500,39 @@ export default function Shop() {
               </button>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <motion.div 
+              initial="initial"
+              animate="whileInView"
+              exit="exit"
+              variants={staggerContainer}
+              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+            >
               {products.map(prod => (
-                <ProductCard
-                  key={prod._id}
-                  product={prod}
-                  onQuickView={(p) => setQuickViewProduct(p)}
-                />
+                <motion.div variants={fadeInUp} key={prod._id} layout>
+                  <ProductCard
+                    product={prod}
+                    onQuickView={(p) => setQuickViewProduct(p)}
+                  />
+                </motion.div>
               ))}
               {loading && [1, 2, 3, 4].map(n => (
-                <div key={n} className="aspect-[3/4] skeleton-shimmer rounded-xl" />
+                <motion.div variants={scaleUp} key={n} className="aspect-[3/4] skeleton-shimmer rounded-xl" />
               ))}
-            </div>
+            </motion.div>
           ) : (
             // List View Layout
-            <div className="space-y-4">
+            <motion.div 
+              initial="initial"
+              animate="whileInView"
+              variants={staggerContainer}
+              className="space-y-4"
+            >
               {products.map(prod => {
                 const currentPrice = prod.price / 100;
                 const originalPrice = prod.originalPrice ? prod.originalPrice / 100 : null;
                 const primaryImage = prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
                 return (
-                  <div key={prod._id} className="flex bg-brand-white border border-brand-border/40 p-4 rounded-xl hover:shadow-md transition-shadow gap-4 text-left">
+                  <motion.div variants={fadeInUp} key={prod._id} layout className="flex bg-brand-white border border-brand-border/40 p-4 rounded-xl hover:shadow-md transition-shadow gap-4 text-left">
                     <img src={primaryImage} alt={prod.name} className="w-24 h-32 object-cover object-top rounded-md border" />
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
@@ -539,11 +553,11 @@ export default function Shop() {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-              {loading && [1, 2].map(n => <div key={n} className="h-40 skeleton-shimmer rounded-xl" />)}
-            </div>
+              {loading && [1, 2].map(n => <motion.div variants={fadeInUp} key={n} className="h-40 skeleton-shimmer rounded-xl" />)}
+            </motion.div>
           )}
 
           {/* Load More Trigger */}
@@ -703,12 +717,14 @@ export default function Shop() {
       )}
 
       {/* Quick View Popup Modal */}
-      {quickViewProduct && (
-        <QuickViewModal
-          product={quickViewProduct}
-          onClose={() => setQuickViewProduct(null)}
-        />
-      )}
+      <AnimatePresence>
+        {quickViewProduct && (
+          <QuickViewModal
+            product={quickViewProduct}
+            onClose={() => setQuickViewProduct(null)}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );

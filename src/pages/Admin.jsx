@@ -689,22 +689,30 @@ function ProductsView({ token: tokenProp }) {
   };
 
   const handleDeleteProductClick = async (prod) => {
-    if (!window.confirm(`Delete "${prod.name}"? This cannot be undone.`)) return;
+    console.log('[handleDeleteProductClick] Clicked for product:', prod);
+    if (!window.confirm(`Delete "${prod.name}"? This cannot be undone.`)) {
+      console.log('[handleDeleteProductClick] User cancelled deletion confirmation');
+      return;
+    }
 
     try {
       const freshToken = useAuthStore.getState().token;
+      console.log('[handleDeleteProductClick] Sending DELETE request with token:', freshToken ? 'present' : 'missing');
       const response = await fetch(`/api/products/${prod._id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${freshToken}` }
       });
+      console.log('[handleDeleteProductClick] Response status:', response.status);
       if (response.ok) {
+        console.log('[handleDeleteProductClick] Product deleted successfully');
         fetchProducts();
       } else {
         const errorData = await response.json();
+        console.error('[handleDeleteProductClick] Delete failed. Error:', errorData);
         alert(errorData.error || 'Failed to delete product.');
       }
     } catch (e) {
-      console.error(e);
+      console.error('[handleDeleteProductClick] Network error:', e);
       alert('Failed to delete product due to a network error.');
     }
   };
@@ -1358,21 +1366,30 @@ function CategoriesView({ token }) {
   };
 
   const handleDeleteClick = async (cat) => {
-    if (!confirm(`Delete category "${cat.name}"?`)) return;
+    console.log('[handleDeleteClick] Clicked for category:', cat);
+    if (!confirm(`Delete category "${cat.name}"?`)) {
+      console.log('[handleDeleteClick] User cancelled deletion confirmation');
+      return;
+    }
 
     try {
+      const freshToken = useAuthStore.getState().token;
+      console.log('[handleDeleteClick] Sending DELETE request with token:', freshToken ? 'present' : 'missing');
       const response = await fetch(`/api/categories/${cat._id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${freshToken}` }
       });
       const data = await response.json();
+      console.log('[handleDeleteClick] Response status:', response.status, 'data:', data);
       if (response.ok) {
+        console.log('[handleDeleteClick] Category deleted successfully');
         fetchCats();
       } else {
+        console.error('[handleDeleteClick] Delete failed. Error:', data);
         alert(data.error || 'Deletion failed.');
       }
     } catch (e) {
-      console.error(e);
+      console.error('[handleDeleteClick] Network error:', e);
     }
   };
 

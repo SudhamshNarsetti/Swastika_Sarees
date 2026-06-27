@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User as UserIcon, Phone, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { scaleUp } from '../utils/animations';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -63,7 +65,8 @@ export default function Login() {
       }
       const success = await signUp(email, password, fullName, phone);
       if (success) {
-        setFormError('Account created successfully! Check your email for OTP verification.');
+        setFormError('Account created successfully! Please log in.');
+        setActiveTab('login');
       }
     }
   };
@@ -112,8 +115,17 @@ export default function Login() {
             {activeTab === 'login' ? "Trendy & Elegant Ladies' Apparel" : "Join Swastika Sarees Boutique"}
           </p>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs">
+        
+        <AnimatePresence mode="wait">
+          <motion.form 
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            onSubmit={handleSubmit} 
+            className="space-y-4 font-sans text-xs"
+          >
           
           {activeTab === 'register' && (
             <>
@@ -205,7 +217,8 @@ export default function Login() {
           >
             {loading ? 'Processing...' : activeTab === 'login' ? 'Log In' : 'Create Account'}
           </button>
-        </form>
+          </motion.form>
+        </AnimatePresence>
 
       </div>
 

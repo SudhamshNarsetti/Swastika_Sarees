@@ -14,12 +14,24 @@
     --brand-border: #E8D5C4;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-brand-cream text-brand-dark font-sans antialiased;
   }
 
+  ::selection {
+    @apply bg-brand-crimson/20 text-brand-dark;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-semibold;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2;
   }
 }
 
@@ -121,3 +133,103 @@
   animation: float-slow 3s ease-in-out infinite;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in-out forwards;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.skeleton-shimmer {
+  background: #f0eee5;
+  background-image: linear-gradient(to right, #f0eee5 0%, #e6e2d3 20%, #f0eee5 40%, #f0eee5 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%; 
+  animation-duration: 2s;
+  animation-fill-mode: forwards; 
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+}
+
+/* Custom Scroll Progress Indicator */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--brand-crimson);
+  transform-origin: 0%;
+  z-index: 9999;
+  box-shadow: 0 0 10px rgba(139, 26, 26, 0.5);
+}
+
+/* Luxury Dividers */
+.luxury-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3rem 0;
+  opacity: 0.8;
+}
+
+.luxury-divider::before,
+.luxury-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--brand-gold), transparent);
+  margin: 0 2rem;
+}
+
+/* Ambient Background Animations */
+@keyframes ambientGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.ambient-glow-bg {
+  background: radial-gradient(circle at 50% 50%, rgba(200, 131, 42, 0.05) 0%, transparent 70%);
+  animation: ambientGlow 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Cursor interaction base utilities */
+.hover-glow {
+  transition: box-shadow 0.3s ease-out;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(200, 131, 42, 0.3);
+}
+
+/* Smooth Link Underlines */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--brand-crimson);
+  transform-origin: bottom right;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}

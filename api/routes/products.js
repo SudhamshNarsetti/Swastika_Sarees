@@ -341,13 +341,17 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 // DELETE product (Admin)
 router.delete('/:id', requireAdmin, async (req, res) => {
+  console.log('[DELETE /products/:id] Request received for ID:', req.params.id);
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) {
+      console.log('[DELETE /products/:id] Product not found:', req.params.id);
       return res.status(404).json({ error: 'Product not found' });
     }
+    console.log('[DELETE /products/:id] Product deleted successfully:', req.params.id);
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
+    console.error('[DELETE /products/:id] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

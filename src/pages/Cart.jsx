@@ -3,9 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Heart, ArrowRight, ShoppingCart, Percent, AlertCircle, Plus, Minus } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useWishlistStore } from '../store/wishlistStore';
+import { useAuthStore } from '../store/authStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainer, fadeInUp, scaleUp } from '../utils/animations';
 
 export default function Cart() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const {
     cart,
     appliedCoupon,
@@ -55,7 +59,11 @@ export default function Cart() {
 
   if (cart.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center select-none flex flex-col items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-7xl mx-auto px-4 py-20 text-center select-none flex flex-col items-center"
+      >
         <div className="p-4 bg-brand-gold/10 text-brand-gold rounded-full mb-6">
           <ShoppingCart size={48} />
         </div>
@@ -69,7 +77,7 @@ export default function Cart() {
         >
           Start Shopping
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
@@ -100,13 +108,27 @@ export default function Cart() {
             )}
           </div>
 
-          <div className="divide-y divide-brand-border/40 bg-brand-white border border-brand-border/40 rounded-xl overflow-hidden shadow-xs">
+          <motion.div 
+            initial="initial"
+            animate="whileInView"
+            variants={staggerContainer}
+            className="divide-y divide-brand-border/40 bg-brand-white border border-brand-border/40 rounded-xl overflow-hidden shadow-xs"
+          >
+            <AnimatePresence>
             {cart.map((item, idx) => {
               const isOOS = item.stock === 0;
               const hasInsufficientStock = item.stock < item.quantity;
               
               return (
-                <div key={idx} className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 relative">
+                <motion.div 
+                  variants={fadeInUp}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                  key={`${item.product}-${item.color}-${item.size}`} 
+                  className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 relative"
+                >
                   
                   {/* Item Image */}
                   <div className="w-20 h-28 bg-brand-cream border border-brand-border/40 rounded-md overflow-hidden shrink-0 self-start select-none">
@@ -190,10 +212,11 @@ export default function Cart() {
 
                   </div>
 
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+            </AnimatePresence>
+          </motion.div>
 
           <div className="pt-2 select-none">
             <Link to="/shop" className="text-xs sm:text-sm font-semibold text-brand-crimson hover:underline">
@@ -277,7 +300,7 @@ export default function Cart() {
 
           {/* Checkout triggers */}
           <button
-            onClick={() => navigate('/checkout')}
+            onClick={() => !user ? navigate('/login?redirect=/checkout') : navigate('/checkout')}
             disabled={cart.some(item => item.stock < item.quantity)}
             className="w-full bg-brand-crimson hover:bg-brand-muted disabled:bg-brand-muted/20 text-brand-cream py-3.5 rounded-lg flex items-center justify-center space-x-2 font-semibold transition-colors shadow-md border border-brand-gold/30 disabled:border-none"
           >
