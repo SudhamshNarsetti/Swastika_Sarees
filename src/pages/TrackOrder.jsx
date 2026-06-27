@@ -22,12 +22,19 @@ export default function TrackOrder() {
     setLoading(true);
     try {
       const response = await fetch(`/api/orders/track?orderId=${orderId.trim()}&phone=${phone.trim()}`);
-      const data = await response.json();
-      
       if (response.ok) {
+        const data = await response.json();
         setOrder(data);
       } else {
-        setErrorMsg(data.error || 'Failed to locate order matching these details.');
+        let errorMsg = 'Failed to locate order matching these details.';
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errData = await response.json();
+            errorMsg = errData.error || errorMsg;
+          }
+        } catch (_) {}
+        setErrorMsg(errorMsg);
       }
     } catch (err) {
       setErrorMsg('Error connecting to the tracking server.');

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, FolderHeart, ListOrdered, Users, Ticket, Image,
-  MessageSquare, BarChart3, Settings, ShieldAlert, Plus, Edit, Trash2, Eye, CheckCircle2, XCircle, Upload, X, Star
+  MessageSquare, BarChart3, Settings, ShieldAlert, Plus, Edit, Trash2, Eye, CheckCircle2, XCircle, Upload, X, Star, Mail
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -182,6 +182,12 @@ export default function Admin() {
               <Image size={16} /> <span>Homepage Content</span>
             </button>
             <button
+              onClick={() => setActiveTab('leads')}
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors ${activeTab === 'leads' ? 'bg-brand-crimson text-brand-cream' : 'hover:bg-brand-muted/40 hover:text-brand-gold'}`}
+            >
+              <Mail size={16} /> <span>Marketing Leads</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-brand-crimson text-brand-cream' : 'hover:bg-brand-muted/40 hover:text-brand-gold'}`}
             >
@@ -228,6 +234,9 @@ export default function Admin() {
 
         {/* Tab 8: Settings Management */}
         {activeTab === 'settings' && <SettingsView token={token} />}
+
+        {/* Tab 10: Marketing Leads */}
+        {activeTab === 'leads' && <LeadsView token={token} />}
 
       </main>
 
@@ -2892,7 +2901,26 @@ function HomepageView({ token: tokenProp }) {
                         });
                         const data = await res.json();
                         if (res.ok && data.url) {
-                          setHeroForm(prev => ({ ...prev, heroLandingVideoUrl: data.url }));
+                          setHeroForm(prev => {
+                            const updated = { ...prev, heroLandingVideoUrl: data.url };
+                            fetch('/api/settings', {
+                              method: 'PUT',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                              },
+                              body: JSON.stringify(updated)
+                            })
+                            .then(saveRes => {
+                              if (saveRes.ok) {
+                                setHeroSuccess('Video uploaded and saved to settings successfully!');
+                              } else {
+                                console.error('Failed to auto-save settings');
+                              }
+                            })
+                            .catch(err => console.error('Auto-save video failed:', err));
+                            return updated;
+                          });
                         } else {
                           alert(data.error || 'Video upload failed');
                         }
@@ -3818,3 +3846,99 @@ function SettingsView({ token }) {
 }
 
 const SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+
+function LeadsView({ token }) {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLeads = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/leads', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLeads(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, [token]);
+
+  const handleExportCSV = () => {
+    if (leads.length === 0) return;
+    const headers = ['Email', 'Phone', 'Created At'];
+    const rows = leads.map(l => [
+      l.email || '',
+      l.phone || '',
+      new Date(l.createdAt).toLocaleString()
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `swastika_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="space-y-6 text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b pb-3 border-brand-border/40">
+        <div>
+          <h2 className="font-display font-bold text-brand-dark text-xl select-none">Marketing Leads</h2>
+          <p className="text-brand-muted text-xs mt-1">Leads captured from the homepage discount capture popup modal.</p>
+        </div>
+        {leads.length > 0 && (
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center space-x-1.5 bg-brand-crimson hover:bg-brand-gold text-brand-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-md"
+          >
+            <span>Export CSV</span>
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="py-6 text-center text-brand-muted">Loading leads list...</div>
+      ) : (
+        <div className="overflow-x-auto border border-brand-border rounded-2xl bg-brand-white shadow-2xs">
+          <table className="min-w-full divide-y divide-brand-border">
+            <thead className="bg-brand-cream text-[10px] text-brand-crimson font-bold uppercase tracking-wider text-left select-none">
+              <tr>
+                <th className="px-6 py-3">#</th>
+                <th className="px-6 py-3">Email Address</th>
+                <th className="px-6 py-3">WhatsApp Number</th>
+                <th className="px-6 py-3">Captured Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-brand-border/40 font-sans text-xs">
+              {leads.map((lead, idx) => (
+                <tr key={lead._id} className="hover:bg-brand-cream/10">
+                  <td className="px-6 py-4 font-semibold text-brand-muted">{idx + 1}</td>
+                  <td className="px-6 py-4 font-semibold text-brand-dark">{lead.email || '—'}</td>
+                  <td className="px-6 py-4 text-brand-dark font-mono">{lead.phone ? `+91 ${lead.phone}` : '—'}</td>
+                  <td className="px-6 py-4 text-brand-muted">{new Date(lead.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+              {leads.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-brand-muted italic select-none">No marketing leads captured yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

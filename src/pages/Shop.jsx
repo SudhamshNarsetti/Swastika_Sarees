@@ -53,9 +53,15 @@ export default function Shop() {
   // Load initial settings & categories
   useEffect(() => {
     fetch('/api/categories')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => setCategories(data))
-      .catch(err => console.error('Failed to load categories', err));
+      .catch(err => {
+        console.error('Failed to load categories', err);
+        setCategories([]);
+      });
   }, []);
 
   // Sync price inputs and reset page when URL searchParams change
@@ -110,17 +116,18 @@ export default function Shop() {
       queryParams.set('limit', '12');
 
       const response = await fetch(`/api/products?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       
-      if (response.ok) {
-        if (append) {
-          setProducts(prev => [...prev, ...data.products]);
-        } else {
-          setProducts(data.products);
-        }
-        setTotalProducts(data.total);
-        setTotalPages(data.totalPages);
+      if (append) {
+        setProducts(prev => [...prev, ...(data.products || [])]);
+      } else {
+        setProducts(data.products || []);
       }
+      setTotalProducts(data.total || 0);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Failed to load products catalog:', error);
     } finally {

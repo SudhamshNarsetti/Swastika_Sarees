@@ -41,37 +41,37 @@ export default function ProductDetail() {
       setLoading(true);
       try {
         const res = await fetch(`/api/products/slug/${slug}`);
+        if (!res.ok) {
+          navigate('/404');
+          return;
+        }
         const data = await res.json();
         
-        if (res.ok) {
-          setProduct(data);
-          
-          // Select default variant choices
-          const defaultVariant = data.variants?.[0];
-          setSelectedColor(defaultVariant?.colorName || null);
-          const showSizeInit = data.showSizeChart !== false && data.category?.slug !== 'sarees';
-          setSelectedSize(showSizeInit ? (defaultVariant?.size || null) : null);
-          setActiveImageIndex(0);
-          setQuantity(1);
+        setProduct(data);
+        
+        // Select default variant choices
+        const defaultVariant = data.variants?.[0];
+        setSelectedColor(defaultVariant?.colorName || null);
+        const showSizeInit = data.showSizeChart !== false && data.category?.slug !== 'sarees';
+        setSelectedSize(showSizeInit ? (defaultVariant?.size || null) : null);
+        setActiveImageIndex(0);
+        setQuantity(1);
 
-          // Track recently viewed in localStorage
-          trackRecentlyViewed(data);
+        // Track recently viewed in localStorage
+        trackRecentlyViewed(data);
 
-          // Fetch related products
-          const relRes = await fetch(`/api/products?category=${data.category?.slug}&limit=4`);
+        // Fetch related products
+        const relRes = await fetch(`/api/products?category=${data.category?.slug}&limit=4`);
+        if (relRes.ok) {
           const relData = await relRes.json();
-          if (relRes.ok) {
-            setRelatedProducts(relData.products.filter(p => p._id !== data._id));
-          }
+          setRelatedProducts((relData.products || []).filter(p => p._id !== data._id));
+        }
 
-          // Fetch product reviews
-          const revRes = await fetch(`/api/reviews/product/${data._id}`);
+        // Fetch product reviews
+        const revRes = await fetch(`/api/reviews/product/${data._id}`);
+        if (revRes.ok) {
           const revData = await revRes.json();
-          if (revRes.ok) {
-            setReviewsData(revData);
-          }
-        } else {
-          navigate('/404');
+          setReviewsData(revData || []);
         }
       } catch (err) {
         console.error(err);
@@ -82,9 +82,12 @@ export default function ProductDetail() {
 
     // Load store general settings (for pincode checks and flat charges)
     fetch('/api/settings')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => setSettings(data))
-      .catch(err => console.error(err));
+      .catch(err => console.error('Failed to load settings:', err));
 
     fetchProductDetails();
   }, [slug]);

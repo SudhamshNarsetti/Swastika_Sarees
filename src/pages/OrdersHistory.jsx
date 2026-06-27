@@ -28,9 +28,11 @@ export default function OrdersHistory() {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json();
       if (response.ok) {
+        const data = await response.json();
         setOrders(data);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (e) {
       console.error(e);

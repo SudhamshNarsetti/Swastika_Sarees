@@ -11,7 +11,7 @@ import aiRouter from './routes/ai.js';
 import ordersRouter from './routes/orders.js';
 import uploadRouter from './routes/upload.js';
 import { requireAuth } from './middleware/auth.js';
-import { User, Order, Product } from './db/models.js';
+import { User, Order, Product, Lead } from './db/models.js';
 
 const app = express();
 
@@ -284,6 +284,30 @@ app.put('/api/admin/customers/:id/role', requireAuth, async (req, res) => {
     const { role } = req.body;
     const user = await User.findOneAndUpdate({ id: req.params.id }, { role }, { new: true });
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+// Leads endpoints for marketing popup
+app.post('/api/leads', async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email or phone number is required' });
+    }
+    const lead = await Lead.create({ email, phone });
+    res.status(201).json(lead);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/leads', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access Denied: Admin privileges required' });
+  }
+  try {
+    const leads = await Lead.find().sort({ createdAt: -1 });
+    res.json(leads);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

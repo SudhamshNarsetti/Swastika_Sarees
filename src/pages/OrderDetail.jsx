@@ -27,12 +27,19 @@ export default function OrderDetail() {
         }
 
         const response = await fetch(`/api/orders/detail/${orderId}?${queryParams.toString()}`, { headers });
-        const data = await response.json();
-        
         if (response.ok) {
+          const data = await response.json();
           setOrder(data);
         } else {
-          setErrorMsg(data.error || 'Failed to retrieve order details.');
+          let errorMsg = 'Failed to retrieve order details.';
+          try {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const errData = await response.json();
+              errorMsg = errData.error || errorMsg;
+            }
+          } catch (_) {}
+          setErrorMsg(errorMsg);
         }
       } catch (err) {
         setErrorMsg('Failed to connect to orders desk.');

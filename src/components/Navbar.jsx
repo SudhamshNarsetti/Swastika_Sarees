@@ -260,7 +260,8 @@ export default function Navbar() {
             <Link to="/" className="flex flex-col items-center md:items-start group select-none">
               <motion.span 
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1, scale: isScrolled ? 0.85 : 1, transformOrigin: 'left center' }}
+                animate={{ opacity: 1, scale: isScrolled ? 0.85 : 1 }}
+                style={{ transformOrigin: 'left center' }}
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="font-display text-3xl md:text-[2.1rem] font-bold tracking-tight text-brand-crimson group-hover:text-brand-gold transition-colors duration-300"
               >

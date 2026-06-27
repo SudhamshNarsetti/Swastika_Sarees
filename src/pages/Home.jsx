@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MessageSquare, ShieldCheck, Truck, RotateCcw, HelpCircle, Star, Heart, Instagram } from 'lucide-react';
+import { ArrowRight, MessageSquare, ShieldCheck, Truck, RotateCcw, HelpCircle, Star, Heart, Instagram, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, staggerItem, fadeInUp, scaleUp, kenBurns, fadeScale, slideUpFade, blurReveal, slideInRight } from '../utils/animations';
+import { useAuthStore } from '../store/authStore';
 
 export default function Home() {
   const [banners, setBanners] = useState([]);
@@ -17,35 +18,108 @@ export default function Home() {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
 
+  // Lead capture popup states
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupEmail, setPopupEmail] = useState('');
+  const [popupPhone, setPopupPhone] = useState('');
+  const [popupSubmitting, setPopupSubmitting] = useState(false);
+  const [popupSuccess, setPopupSuccess] = useState(false);
+
+  // Trigger popup after 10s or 200px scroll for unsigned-in new users
+  useEffect(() => {
+    const token = useAuthStore.getState().token;
+    if (token) return;
+
+    const isDismissed = localStorage.getItem('swastika_popup_dismissed');
+    const isSubmitted = localStorage.getItem('swastika_popup_submitted');
+    if (isDismissed || isSubmitted) return;
+
+    let triggered = false;
+    const triggerPopup = () => {
+      if (triggered) return;
+      triggered = true;
+      setShowPopup(true);
+      window.removeEventListener('scroll', handleScroll);
+    };
+
+    const timer = setTimeout(() => {
+      triggerPopup();
+    }, 10000);
+
+    const handleScroll = () => {
+      if (window.scrollY > 200) {
+        triggerPopup();
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const handlePopupSubmit = async (e) => {
+    e.preventDefault();
+    if (!popupEmail && !popupPhone) {
+      alert('Please enter your email or WhatsApp number.');
+      return;
+    }
+    setPopupSubmitting(true);
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: popupEmail, phone: popupPhone })
+      });
+      if (response.ok) {
+        localStorage.setItem('swastika_popup_submitted', 'true');
+        setPopupSuccess(true);
+        setTimeout(() => {
+          setShowPopup(false);
+        }, 2200);
+      } else {
+        alert('Failed to submit. Please try again.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error. Please try again.');
+    } finally {
+      setPopupSubmitting(false);
+    }
+  };
+
+  const handlePopupDismiss = () => {
+    localStorage.setItem('swastika_popup_dismissed', 'true');
+    setShowPopup(false);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch settings
-        const setRes = await fetch('/api/settings');
-        if (setRes.ok) {
-          const setData = await setRes.json();
-          setSettings(setData);
+        const [setRes, banRes, catRes, colRes, revRes] = await Promise.allSettled([
+          fetch('/api/settings').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/banners').then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('/api/categories').then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('/api/products/collections').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/reviews/all?approved=true').then(r => r.ok ? r.json() : []).catch(() => [])
+        ]);
+
+        if (setRes.status === 'fulfilled' && setRes.value) {
+          setSettings(setRes.value);
         }
-
-        // Fetch banners
-        const banRes = await fetch('/api/banners');
-        const banData = await banRes.json();
-        setBanners(banData);
-
-        // Fetch categories
-        const catRes = await fetch('/api/categories');
-        const catData = await catRes.json();
-        setCategories(catData);
-
-        // Fetch products collections
-        const colRes = await fetch('/api/products/collections');
-        const colData = await colRes.json();
-        setCollections(colData);
-
-        // Fetch approved reviews
-        const revRes = await fetch('/api/reviews/all?approved=true');
-        const revData = await revRes.json();
-        setReviews(revData);
+        if (banRes.status === 'fulfilled' && banRes.value) {
+          setBanners(banRes.value);
+        }
+        if (catRes.status === 'fulfilled' && catRes.value) {
+          setCategories(catRes.value);
+        }
+        if (colRes.status === 'fulfilled' && colRes.value) {
+          setCollections(colRes.value);
+        }
+        if (revRes.status === 'fulfilled' && revRes.value) {
+          setReviews(revRes.value);
+        }
       } catch (err) {
         console.error('Failed to load home page content:', err);
       } finally {
@@ -121,6 +195,81 @@ export default function Home() {
 
   return (
     <div className="relative">
+
+      {/* 0. Brand-new Hero Split Landing Section (Appears above the main carousel) */}
+      {settings?.heroLandingActive && (
+        <motion.section 
+          initial={{ scaleY: 0, opacity: 0 }}
+          animate={{ scaleY: 1, opacity: 1 }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: 'top center' }}
+          className="relative w-full min-h-[50vh] md:h-[65vh] flex flex-col md:flex-row bg-brand-cream overflow-hidden border-b border-brand-border/40 select-none"
+        >
+          {/* Left panel (Text Details & CTA) */}
+          <div className="w-full md:w-1/2 p-8 sm:p-16 md:p-20 flex flex-col justify-center text-left space-y-6 z-10">
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-brand-dark tracking-tight"
+            >
+              {settings.heroLandingHeading || 'Craftsmanship You Can Feel In Every Fold!'}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="font-sans text-sm sm:text-base text-brand-muted max-w-lg leading-relaxed"
+            >
+              {settings.heroLandingSubheading || 'Thoughtfully manufactured for modern Indian women.'}
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="pt-2"
+            >
+              <Link
+                to={settings.heroLandingCtaLink || '/shop'}
+                className="inline-flex items-center justify-center bg-brand-dark hover:bg-brand-muted text-brand-cream px-8 py-3.5 rounded-sm text-xs font-semibold uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                {settings.heroLandingCtaText || 'Shop Now'}
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Right panel (Media Section) */}
+          <div className="w-full md:w-1/2 relative aspect-video md:aspect-auto h-[40vh] md:h-full overflow-hidden bg-brand-dark">
+            {settings.heroLandingMediaType === 'video' && settings.heroLandingVideoUrl ? (
+              <video
+                src={settings.heroLandingVideoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              // Fallback Images Carousel / Single Image
+              <div className="w-full h-full relative">
+                {settings.heroLandingImages && settings.heroLandingImages.length > 0 ? (
+                  <img
+                    src={settings.heroLandingImages[0]}
+                    alt="Craftsmanship"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1000"
+                    alt="Craftsmanship Fallback"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </motion.section>
+      )}
 
       {/* 1. HERO BANNER CAROUSEL (First section below header) */}
       <section className="relative h-[60vh] lg:h-[78vh] w-full overflow-hidden bg-brand-dark">
@@ -638,6 +787,123 @@ export default function Home() {
             product={quickViewProduct}
             onClose={() => setQuickViewProduct(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Lead Capture Popup Modal */}
+      <AnimatePresence>
+        {showPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none">
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl bg-[#FFF8F0] rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-[#E8D5C4]/30 h-[80vh] md:h-auto max-h-[600px] text-left"
+            >
+              {/* Close Button */}
+              <button
+                onClick={handlePopupDismiss}
+                className="absolute top-4 right-4 z-20 p-2 text-[#1A0505]/60 hover:text-[#1A0505] transition-colors bg-white/20 md:bg-transparent rounded-full"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Left Side: Image panel (Saree models & discount) */}
+              <div className="w-full md:w-1/2 relative bg-[#1A0505] h-2/5 md:h-auto overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800"
+                  alt="Special saree collections discount banner"
+                  className="w-full h-full object-cover object-top"
+                />
+                {/* Floating overlays for discount */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A0505]/90 via-[#1A0505]/20 to-transparent flex flex-col justify-end p-6 text-left">
+                  <span className="font-display text-2xl sm:text-3xl text-[#FFF8F0] font-bold leading-tight">
+                    Most-wanted <span className="italic font-normal">saree</span> collection!
+                  </span>
+                  <div className="mt-3 inline-flex items-center space-x-2 bg-[#8B1A1A] text-[#FFF8F0] px-3 py-1.5 rounded border border-[#C8832A]/30 self-start text-xs font-bold uppercase tracking-wider">
+                    <span>Get UPTO 50% OFF</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Beige form panel */}
+              <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center text-left space-y-6 h-3/5 md:h-auto bg-[#E8D5C4]/30">
+                {!popupSuccess ? (
+                  <form onSubmit={handlePopupSubmit} className="space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-display font-bold text-xl sm:text-2xl text-[#1A0505] tracking-wide">
+                        Drapes Everyone's Obsessed With!
+                      </h3>
+                      <p className="text-xs text-[#6B3A3A] font-sans leading-relaxed">
+                        Subscribe to get exclusive collections, custom sizes updates, and first-order discount codes!
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Email Address */}
+                      <div className="flex flex-col">
+                        <input
+                          type="email"
+                          required
+                          value={popupEmail}
+                          onChange={(e) => setPopupEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          className="bg-[#FFF8F0]/80 border border-[#E8D5C4]/60 p-3 rounded text-xs focus:outline-none focus:border-[#C8832A] text-[#1A0505] placeholder-[#6B3A3A]/50"
+                        />
+                      </div>
+
+                      {/* WhatsApp / Phone */}
+                      <div className="flex space-x-2">
+                        <div className="flex bg-[#FFF8F0]/80 border border-[#E8D5C4]/60 rounded px-3 py-2 items-center space-x-1.5 select-none shrink-0 text-xs">
+                          <span>🇮🇳</span>
+                          <span className="font-semibold text-[#1A0505]">+91</span>
+                        </div>
+                        <input
+                          type="tel"
+                          pattern="[0-9]{10}"
+                          title="Please enter a valid 10-digit number"
+                          value={popupPhone}
+                          onChange={(e) => setPopupPhone(e.target.value)}
+                          placeholder="Whatsapp Number"
+                          className="flex-grow bg-[#FFF8F0]/80 border border-[#E8D5C4]/60 p-3 rounded text-xs focus:outline-none focus:border-[#C8832A] text-[#1A0505] placeholder-[#6B3A3A]/50"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={popupSubmitting}
+                      className="w-full bg-[#5C2E2E] hover:bg-[#1A0505] text-[#FFF8F0] py-3 rounded text-xs font-semibold uppercase tracking-widest transition-colors duration-300 shadow-md flex items-center justify-center"
+                    >
+                      {popupSubmitting ? 'Joining...' : 'Join Swastika Family'}
+                    </button>
+                    
+                    <div className="text-center pt-2 select-none">
+                      <span className="text-[10px] text-[#6B3A3A]/60 font-sans tracking-wide">
+                        Powered by <strong className="font-bold text-[#6B3A3A]/80">Swastika Sarees</strong>
+                      </span>
+                    </div>
+                  </form>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-10 space-y-4"
+                  >
+                    <span className="text-4xl">🎉</span>
+                    <h3 className="font-display font-bold text-2xl text-[#1A0505]">
+                      Welcome to the Family!
+                    </h3>
+                    <p className="text-xs text-[#6B3A3A] font-sans max-w-xs mx-auto leading-relaxed">
+                      Thank you for subscribing. We will send exclusive offers and updates directly to your inbox and WhatsApp!
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

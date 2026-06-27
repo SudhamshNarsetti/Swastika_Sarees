@@ -230,9 +230,15 @@ const SettingSchema = new Schema({
   heroLandingSubheading: { type: String, default: 'Thoughtfully manufactured for modern Indian women.' },
   heroLandingCtaText: { type: String, default: 'Shop Now' },
   heroLandingCtaLink: { type: String, default: '/shop' },
-  heroLandingMediaType: { type: String, enum: ['video', 'images'], default: 'images' },
+   heroLandingMediaType: { type: String, enum: ['video', 'images'], default: 'images' },
   heroLandingVideoUrl: { type: String, default: '' },
   heroLandingImages: [{ type: String }]
+}, { timestamps: true });
+
+// 13. Lead Schema for Marketing Popups
+const LeadSchema = new Schema({
+  email: { type: String, trim: true, lowercase: true },
+  phone: { type: String, trim: true }
 }, { timestamps: true });
 
 // Prevent model overwrite compiled errors on hot-reloading
@@ -245,3 +251,4 @@ export const Review = mongoose.models.Review || mongoose.model('Review', ReviewS
 export const Banner = mongoose.models.Banner || mongoose.model('Banner', BannerSchema);
 export const Setting = mongoose.models.Setting || mongoose.model('Setting', SettingSchema);
 export const Address = mongoose.models.Address || mongoose.model('Address', AddressSchema);
+export const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);

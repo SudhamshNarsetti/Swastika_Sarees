@@ -55,9 +55,12 @@ export default function Checkout() {
   // Load configuration settings
   useEffect(() => {
     fetch('/api/settings')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => setSettings(data))
-      .catch(err => console.error(err));
+      .catch(err => console.error('Failed to load settings:', err));
 
     // Redirect to home if cart is empty
     if (cart.length === 0) {

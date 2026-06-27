@@ -21,9 +21,11 @@ export default function OrderSuccess() {
         
         // Allow fallback / mock fetching
         const response = await fetch(`/api/orders/detail/${orderId}`);
-        const data = await response.json();
         if (response.ok) {
+          const data = await response.json();
           setOrder(data);
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
       } catch (err) {
         console.error('Failed to retrieve success order details:', err);
@@ -37,9 +39,12 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     fetch('/api/settings')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(d => setSettings(d))
-      .catch(err => console.error(err));
+      .catch(err => console.error('Failed to load settings:', err));
   }, []);
 
   const estDeliveryDate = new Date();
