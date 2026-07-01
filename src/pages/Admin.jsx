@@ -11,6 +11,9 @@ import { detectVariantColor } from '../services/ai/colorDetection';
 import { uploadFileWithProgress } from '../utils/uploadHelpers';
 import AdminLayout from '../layouts/AdminLayout';
 import ProductSizeEditor from '../components/ProductSizeEditor';
+import { getCloudinaryTransformedUrl, removeCloudinaryTransformation } from '../utils/imageHelpers';
+import ImageCropperModal from '../components/admin/ImageCropperModal';
+import { Crop } from 'lucide-react';
 
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useModalStore } from '../store/modalStore';
@@ -758,6 +761,12 @@ function ProductsView({ token: tokenProp }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
+  // Image Cropping States
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageUrl, setCropperImageUrl] = useState('');
+  const [cropperSaveHandler, setCropperSaveHandler] = useState(null);
+  const [cropperSaving, setCropperSaving] = useState(false);
+
   // Form Fields State
   const [formData, setFormData] = useState({
     name: '',
@@ -1044,6 +1053,28 @@ function ProductsView({ token: tokenProp }) {
       if (next.length > 0 && !next.some(i => i.isPrimary)) next[0].isPrimary = true;
       return next;
     });
+  };
+
+  const toggleAutoCrop = (idx) => {
+    setUploadedImages(prev => {
+      const updated = prev.map((img, i) => {
+        if (i === idx) {
+          const isCurrentlyCropped = img.url.includes('c_fill,g_face');
+          const newUrl = isCurrentlyCropped 
+            ? removeCloudinaryTransformation(img.url) 
+            : getCloudinaryTransformedUrl(img.url, 'ar_2:3,c_fill,g_face');
+          return { ...img, url: newUrl };
+        }
+        return img;
+      });
+      return updated;
+    });
+  };
+
+  const handleOpenManualCrop = (url, saveCallback) => {
+    setCropperImageUrl(url);
+    setCropperSaveHandler(() => saveCallback);
+    setCropperOpen(true);
   };
 
 
@@ -1357,6 +1388,29 @@ function ProductsView({ token: tokenProp }) {
         list[vIdx] = {
           ...list[vIdx],
           images: newImages
+        };
+      }
+      return { ...prev, variants: list };
+    });
+  };
+
+  const toggleVariantAutoCrop = (vIdx, imgIdx) => {
+    setFormData(prev => {
+      const list = [...prev.variants];
+      if (list[vIdx] && list[vIdx].images) {
+        const updated = list[vIdx].images.map((img, i) => {
+          if (i === imgIdx) {
+            const isCurrentlyCropped = img.url.includes('c_fill,g_face');
+            const newUrl = isCurrentlyCropped 
+              ? removeCloudinaryTransformation(img.url) 
+              : getCloudinaryTransformedUrl(img.url, 'ar_2:3,c_fill,g_face');
+            return { ...img, url: newUrl };
+          }
+          return img;
+        });
+        list[vIdx] = {
+          ...list[vIdx],
+          images: updated
         };
       }
       return { ...prev, variants: list };
@@ -1900,14 +1954,52 @@ function ProductsView({ token: tokenProp }) {
                             img.isPrimary ? 'border-brand-crimson shadow-md' : 'border-brand-border hover:border-brand-gold'
                           }`} style={{ width: 80, height: 106 }}>
                             <img src={img.url} alt="" className="w-full h-full object-cover object-top" />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                            
+                            <button 
+                              type="button" 
+                              onClick={() => removeUploadedImage(i)} 
+                              className="absolute top-1 right-1 p-0.5 rounded-full bg-brand-crimson/80 hover:bg-brand-crimson text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+                              title="Remove"
+                            >
+                              <X size={10} />
+                            </button>
+
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 p-1">
                               {!img.isPrimary && (
-                                <button type="button" onClick={() => setPrimaryImage(i)} className="px-2 py-1 rounded bg-brand-gold text-white text-[10px] font-bold shadow-sm" title="Set as primary">Set Primary</button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => setPrimaryImage(i)} 
+                                  className="w-full py-0.5 rounded bg-brand-gold text-white text-[8px] font-bold shadow-sm leading-none text-center" 
+                                  title="Set as primary"
+                                >
+                                  Set Primary
+                                </button>
                               )}
-                              <button type="button" onClick={() => removeUploadedImage(i)} className="p-1.5 rounded-full bg-brand-crimson text-white shadow-sm" title="Remove"><X size={12} /></button>
+                              <button 
+                                type="button" 
+                                onClick={() => toggleAutoCrop(i)} 
+                                className={`w-full py-0.5 rounded text-white text-[8px] font-bold leading-none text-center transition-colors ${
+                                  img.url.includes('c_fill,g_face') ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
+                                }`}
+                              >
+                                {img.url.includes('c_fill,g_face') ? 'Auto ✓' : 'Auto Crop'}
+                              </button>
+                              <button 
+                                type="button" 
+                                onClick={() => handleOpenManualCrop(img.url, (croppedUrl) => {
+                                  setUploadedImages(prev => {
+                                    const next = [...prev];
+                                    next[i] = { ...next[i], url: croppedUrl };
+                                    return next;
+                                  });
+                                })} 
+                                className="w-full py-0.5 rounded bg-slate-600 hover:bg-slate-700 text-white text-[8px] font-bold leading-none text-center"
+                              >
+                                Manual Crop
+                              </button>
                             </div>
                             {img.isPrimary && (
-                              <span className="absolute bottom-0 left-0 right-0 bg-brand-crimson text-white text-[9px] font-bold tracking-wider text-center py-0.5">PRIMARY ★</span>
+                              <span className="absolute bottom-0 left-0 right-0 bg-brand-crimson text-white text-[8px] font-bold tracking-wider text-center py-0.5">PRIMARY ★</span>
                             )}
                           </div>
                         ))}
@@ -2166,14 +2258,55 @@ function ProductsView({ token: tokenProp }) {
                               img.isPrimary ? 'border-brand-crimson shadow-md' : 'border-brand-border hover:border-brand-gold'
                             }`} style={{ width: 84, height: 112 }}>
                               <img src={img.url} alt="" className="w-full h-full object-cover object-top" />
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                              
+                              <button 
+                                type="button" 
+                                onClick={() => removeVariantImage(i, imgIdx)} 
+                                className="absolute top-1 right-1 p-0.5 rounded-full bg-brand-crimson/80 hover:bg-brand-crimson text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+                                title="Remove"
+                              >
+                                <X size={10} />
+                              </button>
+
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 p-1">
                                 {!img.isPrimary && (
-                                  <button type="button" onClick={() => setVariantPrimaryImage(i, imgIdx)} className="px-2 py-1 rounded bg-brand-gold text-white text-[10px] font-bold shadow-sm">Set Primary</button>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => setVariantPrimaryImage(i, imgIdx)} 
+                                    className="w-full py-0.5 rounded bg-brand-gold text-white text-[8px] font-bold shadow-sm leading-none text-center"
+                                  >
+                                    Set Primary
+                                  </button>
                                 )}
-                                <button type="button" onClick={() => removeVariantImage(i, imgIdx)} className="p-1.5 rounded-full bg-brand-crimson text-white shadow-sm" title="Remove"><X size={12} /></button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => toggleVariantAutoCrop(i, imgIdx)} 
+                                  className={`w-full py-0.5 rounded text-white text-[8px] font-bold leading-none text-center transition-colors ${
+                                    img.url.includes('c_fill,g_face') ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
+                                  }`}
+                                >
+                                  {img.url.includes('c_fill,g_face') ? 'Auto ✓' : 'Auto Crop'}
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleOpenManualCrop(img.url, (croppedUrl) => {
+                                    setFormData(prev => {
+                                      const list = [...prev.variants];
+                                      if (list[i] && list[i].images) {
+                                        const updatedImages = [...list[i].images];
+                                        updatedImages[imgIdx] = { ...updatedImages[imgIdx], url: croppedUrl };
+                                        list[i] = { ...list[i], images: updatedImages };
+                                      }
+                                      return { ...prev, variants: list };
+                                    });
+                                  })} 
+                                  className="w-full py-0.5 rounded bg-slate-600 hover:bg-slate-700 text-white text-[8px] font-bold leading-none text-center"
+                                >
+                                  Manual Crop
+                                </button>
                               </div>
                               {img.isPrimary && (
-                                <span className="absolute bottom-0 left-0 right-0 bg-brand-crimson text-white text-[9px] font-bold tracking-wider text-center py-0.5">PRIMARY ★</span>
+                                <span className="absolute bottom-0 left-0 right-0 bg-brand-crimson text-white text-[8px] font-bold tracking-wider text-center py-0.5">PRIMARY ★</span>
                               )}
                             </div>
                           ))}
@@ -2377,6 +2510,33 @@ function ProductsView({ token: tokenProp }) {
             </table>
           </div>
         </div>
+      )}
+
+      {cropperOpen && (
+        <ImageCropperModal
+          imageUrl={cropperImageUrl}
+          isSaving={cropperSaving}
+          onClose={() => setCropperOpen(false)}
+          onSave={async (blob) => {
+            setCropperSaving(true);
+            try {
+              const freshToken = useAuthStore.getState().token;
+              const file = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+              const data = await uploadFileWithProgress(file, freshToken, () => {}, `products/${formData.slug || 'draft'}/cropped`);
+              if (data && data.url) {
+                cropperSaveHandler(data.url);
+                setCropperOpen(false);
+              } else {
+                alert('Upload failed');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Failed to upload cropped image: ' + err.message);
+            } finally {
+              setCropperSaving(false);
+            }
+          }}
+        />
       )}
 
     </div>
@@ -4143,6 +4303,8 @@ function HomepageView({ token: tokenProp }) {
   const [settingsForm, setSettingsForm] = useState({
     homeCategoryHeading: 'Shop by Category',
     homeCategoryDescription: '',
+    homeCategoryLimit: 4,
+    homeCategoryAspectRatio: '3:4',
     homePromoHeading: 'Handpicked. Curated. Yours.',
     homePromoDescription: '',
     homePromoImage1: '',
@@ -4172,6 +4334,22 @@ function HomepageView({ token: tokenProp }) {
   const [heroVideoUploading, setHeroVideoUploading] = useState(false);
   const [heroImagesUploading, setHeroImagesUploading] = useState(false);
 
+  const [storyForm, setStoryForm] = useState({
+    homeStoryActive: true,
+    homeStoryTagline: 'Heritage & Craftsmanship',
+    homeStoryHeading: 'Our Story',
+    homeStoryDescription: '',
+    homeStoryQuote: '',
+    homeStoryAuthor: 'Founder, Swastika Sarees',
+    homeStoryMediaType: 'image',
+    homeStoryImageUrl: '',
+    homeStoryVideoUrl: ''
+  });
+  const [storySaving, setStorySaving] = useState(false);
+  const [storySuccess, setStorySuccess] = useState('');
+  const [storyImageUploading, setStoryImageUploading] = useState(false);
+  const [storyVideoUploading, setStoryVideoUploading] = useState(false);
+
   const fetchBanners = async () => {
     setBannersLoading(true);
     try {
@@ -4200,6 +4378,8 @@ function HomepageView({ token: tokenProp }) {
         setSettingsForm({
           homeCategoryHeading: data.homeCategoryHeading || 'Shop by Category',
           homeCategoryDescription: data.homeCategoryDescription || '',
+          homeCategoryLimit: data.homeCategoryLimit || 4,
+          homeCategoryAspectRatio: data.homeCategoryAspectRatio || '3:4',
           homePromoHeading: data.homePromoHeading || 'Handpicked. Curated. Yours.',
           homePromoDescription: data.homePromoDescription || '',
           homePromoImage1: data.homePromoImage1 || '',
@@ -4218,6 +4398,17 @@ function HomepageView({ token: tokenProp }) {
           heroLandingMediaType: data.heroLandingMediaType || 'images',
           heroLandingVideoUrl: data.heroLandingVideoUrl || '',
           heroLandingImages: data.heroLandingImages || []
+        });
+        setStoryForm({
+          homeStoryActive: data.homeStoryActive !== false,
+          homeStoryTagline: data.homeStoryTagline || 'Heritage & Craftsmanship',
+          homeStoryHeading: data.homeStoryHeading || 'Our Story',
+          homeStoryDescription: data.homeStoryDescription || '',
+          homeStoryQuote: data.homeStoryQuote || '',
+          homeStoryAuthor: data.homeStoryAuthor || 'Founder, Swastika Sarees',
+          homeStoryMediaType: data.homeStoryMediaType || 'image',
+          homeStoryImageUrl: data.homeStoryImageUrl || '',
+          homeStoryVideoUrl: data.homeStoryVideoUrl || ''
         });
       }
     } catch (e) {
@@ -4260,6 +4451,56 @@ function HomepageView({ token: tokenProp }) {
       useModalStore.getState().error('Error', 'Upload failed due to network error');
     } finally {
       setPromoUploading(prev => ({ ...prev, [imageIdx]: false }));
+    }
+  };
+
+  const handleStoryImageUpload = async (file) => {
+    if (!file) return;
+    setStoryImageUploading(true);
+    try {
+      const payload = new FormData();
+      payload.append('image', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: payload
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setStoryForm(prev => ({ ...prev, homeStoryImageUrl: data.url }));
+      } else {
+        alert(data.error || 'Upload failed');
+      }
+    } catch (e) {
+      console.error(e);
+      useModalStore.getState().error('Error', 'Image upload failed');
+    } finally {
+      setStoryImageUploading(false);
+    }
+  };
+
+  const handleStoryVideoUpload = async (file) => {
+    if (!file) return;
+    setStoryVideoUploading(true);
+    try {
+      const payload = new FormData();
+      payload.append('video', file);
+      const res = await fetch('/api/upload/video', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: payload
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setStoryForm(prev => ({ ...prev, homeStoryVideoUrl: data.url }));
+      } else {
+        alert(data.error || 'Video upload failed');
+      }
+    } catch (e) {
+      console.error(e);
+      useModalStore.getState().error('Error', 'Video upload failed due to network error');
+    } finally {
+      setStoryVideoUploading(false);
     }
   };
 
@@ -4564,6 +4805,200 @@ function HomepageView({ token: tokenProp }) {
         </div>
       </div>
 
+      {/* SECTION 1.5: OUR STORY BOUTIQUE SECTION */}
+      <div className="bg-brand-white border border-brand-border p-6 rounded-2xl shadow-md space-y-6">
+        <div className="flex justify-between items-center border-b pb-3">
+          <h3 className="font-display font-bold text-brand-dark text-sm">"Our Story" Boutique Section</h3>
+          <label className="flex items-center space-x-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={storyForm.homeStoryActive}
+              onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryActive: e.target.checked }))}
+              className="accent-emerald-600 w-4 h-4"
+            />
+            <span className="text-xs font-semibold text-brand-dark">{storyForm.homeStoryActive ? 'Active' : 'Hidden'}</span>
+          </label>
+        </div>
+
+        {/* Text Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <label className="font-semibold text-brand-dark mb-1">Section Tagline</label>
+            <input type="text" value={storyForm.homeStoryTagline} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryTagline: e.target.value }))} className="bg-brand-cream border p-2 rounded focus:outline-none" placeholder="e.g. Heritage & Craftsmanship" />
+          </div>
+          <div className="flex flex-col">
+            <label className="font-semibold text-brand-dark mb-1">Section Heading</label>
+            <input type="text" value={storyForm.homeStoryHeading} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryHeading: e.target.value }))} className="bg-brand-cream border p-2 rounded focus:outline-none" placeholder="e.g. Our Story" />
+          </div>
+          <div className="flex flex-col col-span-2">
+            <label className="font-semibold text-brand-dark mb-1">Description Paragraph Text</label>
+            <textarea value={storyForm.homeStoryDescription} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryDescription: e.target.value }))} rows={3} className="bg-brand-cream border p-2 rounded focus:outline-none" placeholder="Enter paragraph text..." />
+          </div>
+          <div className="flex flex-col">
+            <label className="font-semibold text-brand-dark mb-1">Founder's Quote</label>
+            <input type="text" value={storyForm.homeStoryQuote} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryQuote: e.target.value }))} className="bg-brand-cream border p-2 rounded focus:outline-none" placeholder="e.g. We believe in preserving..." />
+          </div>
+          <div className="flex flex-col">
+            <label className="font-semibold text-brand-dark mb-1">Quote Author/Label</label>
+            <input type="text" value={storyForm.homeStoryAuthor} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryAuthor: e.target.value }))} className="bg-brand-cream border p-2 rounded focus:outline-none" placeholder="e.g. Founder, Swastika Sarees" />
+          </div>
+        </div>
+
+        {/* Media Selector & Uploaders */}
+        <div className="border-t pt-4 space-y-4">
+          <h4 className="font-display font-bold text-brand-dark text-2xs uppercase tracking-wider text-brand-gold">Section Media File</h4>
+          <div className="flex space-x-4">
+            <label className="flex items-center space-x-2 cursor-pointer select-none">
+              <input
+                type="radio"
+                name="storyMediaType"
+                value="image"
+                checked={storyForm.homeStoryMediaType === 'image'}
+                onChange={() => setStoryForm(prev => ({ ...prev, homeStoryMediaType: 'image' }))}
+                className="accent-brand-crimson"
+              />
+              <span className="text-xs text-brand-dark font-medium">Use Image</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer select-none">
+              <input
+                type="radio"
+                name="storyMediaType"
+                value="video"
+                checked={storyForm.homeStoryMediaType === 'video'}
+                onChange={() => setStoryForm(prev => ({ ...prev, homeStoryMediaType: 'video' }))}
+                className="accent-brand-crimson"
+              />
+              <span className="text-xs text-brand-dark font-medium">Use Video</span>
+            </label>
+          </div>
+
+          {storyForm.homeStoryMediaType === 'image' ? (
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="w-32 h-24 rounded-lg overflow-hidden border border-brand-border bg-brand-cream shrink-0 relative">
+                {storyForm.homeStoryImageUrl ? (
+                  <img src={storyForm.homeStoryImageUrl} alt="Story Image" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-3xs italic">No Image</div>
+                )}
+              </div>
+              <div className="flex-grow space-y-2 w-full">
+                <label className="block text-brand-muted text-3xs font-semibold">Image URL</label>
+                <div className="flex space-x-2">
+                  <input type="text" value={storyForm.homeStoryImageUrl} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryImageUrl: e.target.value }))} className="flex-grow bg-brand-cream border p-2 rounded focus:outline-none text-2xs" placeholder="Paste image url..." />
+                  <label className="bg-brand-dark hover:bg-brand-muted text-brand-cream px-4 py-2.5 rounded cursor-pointer select-none text-center font-bold whitespace-nowrap shrink-0 text-3xs">
+                    <input type="file" accept="image/*" className="hidden" disabled={storyImageUploading} onChange={(e) => handleStoryImageUpload(e.target.files?.[0])} />
+                    {storyImageUploading ? 'Uploading...' : 'Upload Image'}
+                  </label>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="w-32 h-24 rounded-lg overflow-hidden border border-brand-border bg-brand-cream shrink-0 relative flex items-center justify-center">
+                {storyForm.homeStoryVideoUrl ? (
+                  <video src={storyForm.homeStoryVideoUrl} className="w-full h-full object-cover" muted playsInline />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-3xs italic">No Video</div>
+                )}
+              </div>
+              <div className="flex-grow space-y-2 w-full">
+                <label className="block text-brand-muted text-3xs font-semibold">Video URL</label>
+                <div className="flex space-x-2">
+                  <input type="text" value={storyForm.homeStoryVideoUrl} onChange={(e) => setStoryForm(prev => ({ ...prev, homeStoryVideoUrl: e.target.value }))} className="flex-grow bg-brand-cream border p-2 rounded focus:outline-none text-2xs" placeholder="Paste video url..." />
+                  <label className="bg-brand-dark hover:bg-brand-muted text-brand-cream px-4 py-2.5 rounded cursor-pointer select-none text-center font-bold whitespace-nowrap shrink-0 text-3xs">
+                    <input type="file" accept="video/*" className="hidden" disabled={storyVideoUploading} onChange={(e) => handleStoryVideoUpload(e.target.files?.[0])} />
+                    {storyVideoUploading ? 'Uploading...' : 'Upload Video'}
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between border-t pt-4">
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              disabled={storySaving}
+              onClick={async () => {
+                setStorySaving(true);
+                setStorySuccess('');
+                try {
+                  const res = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(storyForm)
+                  });
+                  if (res.ok) {
+                    setStorySuccess('Story content saved successfully!');
+                  } else {
+                    useModalStore.getState().error('Error', 'Failed to save Our Story settings.');
+                  }
+                } catch (err) {
+                  console.error(err);
+                  useModalStore.getState().error('Error', 'Network error saving story settings.');
+                } finally {
+                  setStorySaving(false);
+                }
+              }}
+              className="bg-brand-crimson hover:bg-brand-gold text-brand-cream px-6 py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50 shadow-md text-xs"
+            >
+              {storySaving ? 'Saving...' : 'Save Our Story Section'}
+            </button>
+            {storySuccess && <span className="text-xs text-emerald-600 font-semibold">{storySuccess}</span>}
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              if (!(await useModalStore.getState().confirm('Confirmation', 'Are you sure you want to delete and reset the Our Story content?'))) return;
+              setStoryForm({
+                homeStoryActive: false,
+                homeStoryTagline: 'Heritage & Craftsmanship',
+                homeStoryHeading: 'Our Story',
+                homeStoryDescription: '',
+                homeStoryQuote: '',
+                homeStoryAuthor: 'Founder, Swastika Sarees',
+                homeStoryMediaType: 'image',
+                homeStoryImageUrl: '',
+                homeStoryVideoUrl: ''
+              });
+              setStorySuccess('');
+              try {
+                await fetch('/api/settings', {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    homeStoryActive: false,
+                    homeStoryTagline: 'Heritage & Craftsmanship',
+                    homeStoryHeading: 'Our Story',
+                    homeStoryDescription: '',
+                    homeStoryQuote: '',
+                    homeStoryAuthor: 'Founder, Swastika Sarees',
+                    homeStoryMediaType: 'image',
+                    homeStoryImageUrl: '',
+                    homeStoryVideoUrl: ''
+                  })
+                });
+                setStorySuccess('Story content deleted and reset.');
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="text-brand-crimson hover:underline text-xs font-semibold"
+          >
+            Delete / Reset Content
+          </button>
+        </div>
+      </div>
+
       {/* SECTION 1: HERO BANNERS CAROUSEL CRUD */}
       <div className="bg-brand-white border border-brand-border p-6 rounded-2xl shadow-md space-y-6">
         <div className="flex justify-between items-center border-b pb-3">
@@ -4635,6 +5070,23 @@ function HomepageView({ token: tokenProp }) {
               <div className="flex flex-col">
                 <label className="font-semibold text-brand-dark mb-1">Category Section Description Text</label>
                 <input type="text" value={settingsForm.homeCategoryDescription} onChange={(e) => setSettingsForm({ ...settingsForm, homeCategoryDescription: e.target.value })} className="bg-brand-cream border p-2 rounded focus:outline-none" />
+              </div>
+              <div className="flex flex-col">
+                <label className="font-semibold text-brand-dark mb-1">Number of Category Cards to Show</label>
+                <input type="number" min={2} max={12} value={settingsForm.homeCategoryLimit} onChange={(e) => setSettingsForm({ ...settingsForm, homeCategoryLimit: parseInt(e.target.value) || 4 })} className="bg-brand-cream border p-2 rounded focus:outline-none" />
+              </div>
+              <div className="flex flex-col">
+                <label className="font-semibold text-brand-dark mb-1">Category Card Size / Crop Option</label>
+                <select
+                  value={settingsForm.homeCategoryAspectRatio}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, homeCategoryAspectRatio: e.target.value })}
+                  className="bg-brand-cream border p-2 rounded focus:outline-none cursor-pointer"
+                >
+                  <option value="3:4">Portrait (3:4) - Perfect for models</option>
+                  <option value="1:1">Square (1:1) - Standard shop cards</option>
+                  <option value="2:3">Classic (2:3) - Sleek vertical cards</option>
+                  <option value="16:9">Landscape (16:9) - Wide banner style</option>
+                </select>
               </div>
             </div>
 

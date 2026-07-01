@@ -279,6 +279,8 @@ const SettingSchema = new Schema({
   deliveryDays: { type: Number, default: 7 }, // expected delivery window in days
   homeCategoryHeading: { type: String, default: 'Shop by Category' },
   homeCategoryDescription: { type: String, default: 'Handcrafted fabrics tailored for festive sparkle, weddings, daily charm, and special moments.' },
+  homeCategoryLimit: { type: Number, default: 4 },
+  homeCategoryAspectRatio: { type: String, default: '3:4' },
   homePromoHeading: { type: String, default: 'Handpicked. Curated. Yours.' },
   homePromoDescription: { type: String, default: 'Unsure of fabric weight, shade match, or sizes? Skip the queue and consult directly with our catalog experts on WhatsApp for product videos, customized sizing checkups, and COD booking services.' },
   homePromoImage1: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=350' },
@@ -296,7 +298,16 @@ const SettingSchema = new Schema({
   heroLandingCtaLink: { type: String, default: '/shop' },
    heroLandingMediaType: { type: String, enum: ['video', 'images'], default: 'images' },
   heroLandingVideoUrl: { type: String, default: '' },
-  heroLandingImages: [{ type: String }]
+  heroLandingImages: [{ type: String }],
+  homeStoryActive: { type: Boolean, default: true },
+  homeStoryTagline: { type: String, default: 'Heritage & Craftsmanship' },
+  homeStoryHeading: { type: String, default: 'Our Story' },
+  homeStoryDescription: { type: String, default: 'At Swastika Sarees, every piece is selected with meticulous attention to craftsmanship, fabric quality, and timeless elegance. We bridge the gap between traditional Indian master weavers and the modern contemporary woman.' },
+  homeStoryQuote: { type: String, default: 'We believe in preserving the rich heritage of Indian textiles while designing comfortable, drape-friendly wear for life\'s special occasions.' },
+  homeStoryAuthor: { type: String, default: 'Founder, Swastika Sarees' },
+  homeStoryMediaType: { type: String, enum: ['image', 'video'], default: 'image' },
+  homeStoryImageUrl: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800' },
+  homeStoryVideoUrl: { type: String, default: '' }
 }, { timestamps: true });
 
 // 13. Lead Schema for Marketing Popups

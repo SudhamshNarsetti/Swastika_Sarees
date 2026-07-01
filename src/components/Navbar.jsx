@@ -153,6 +153,15 @@ export default function Navbar() {
     }
   }, [totalCartQuantity]);
 
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    if (window.location.pathname === '/') {
+      window.location.reload();
+    } else {
+      window.location.href = '/';
+    }
+  };
+
   /* ── Mega Menu hover handlers ──────────────────────────────────────────
      Strategy: The MegaMenu panel is a direct DOM child of <header>.
      Because React uses mouseleave (not mouseout), moving the mouse from
@@ -253,7 +262,7 @@ export default function Navbar() {
 
           {/* Brand Logo */}
           <div className="flex-1 flex justify-center md:justify-start">
-            <Link to="/" className="flex flex-col items-center md:items-start group select-none">
+            <a href="/" onClick={handleLogoClick} className="flex flex-col items-center md:items-start group select-none">
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, scale: isScrolled ? 0.85 : 1 }}
@@ -271,19 +280,11 @@ export default function Navbar() {
               >
                 Shine Bright, Get Your Sparkle On!
               </motion.span>
-            </Link>
+            </a>
           </div>
 
           {/* ── Desktop Navigation ── */}
           <nav className="hidden md:flex items-center space-x-8" aria-label="Main navigation">
-            {/* Home — closes mega menu on hover */}
-            <Link
-              to="/"
-              onMouseEnter={closeMegaMenu}
-              className={navLinkClass(location.pathname === '/')}
-            >
-              Home
-            </Link>
 
             {/* Shop — Mega Menu Trigger
                  NO onMouseLeave here; closing is handled by header's onMouseLeave.
@@ -576,13 +577,7 @@ export default function Navbar() {
 
               {/* Mobile Nav Links */}
               <nav className="flex flex-col space-y-1 text-sm font-medium overflow-y-auto max-h-[70vh]">
-                <Link
-                  to="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-brand-dark hover:text-brand-crimson py-2.5 border-b border-brand-border/40 font-semibold"
-                >
-                  Home
-                </Link>
+
                 <Link
                   to="/shop?new=true"
                   onClick={() => setMobileMenuOpen(false)}

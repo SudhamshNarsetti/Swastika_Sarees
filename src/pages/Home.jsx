@@ -1,12 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, MessageSquare, ShieldCheck, Truck, RotateCcw, HelpCircle, Star, Heart, Instagram, X, Check } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, MessageSquare, ShieldCheck, Truck, RotateCcw, HelpCircle, Star, Heart, Instagram, X, Check, Scissors, Layers, Wind, Sparkles, Gift, Lock, Compass, ChevronLeft, ChevronRight, Eye, ShoppingCart } from 'lucide-react';
 import { useModalStore } from '../store/modalStore';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, staggerItem, fadeInUp, scaleUp, kenBurns, fadeScale, slideUpFade, blurReveal, slideInRight } from '../utils/animations';
 import { useAuthStore } from '../store/authStore';
+import { getCloudinaryTransformedUrl } from '../utils/imageHelpers';
+import { useWishlistStore } from '../store/wishlistStore';
+import { useCartStore } from '../store/cartStore';
+
+const getCategoryLayoutDetails = (aspectRatio) => {
+  switch (aspectRatio) {
+    case '1:1':
+      return { aspectClass: 'aspect-square', transformStr: 'ar_1:1,c_fill,g_face,w_600' };
+    case '2:3':
+      return { aspectClass: 'aspect-[2/3]', transformStr: 'ar_2:3,c_fill,g_face,w_600' };
+    case '16:9':
+      return { aspectClass: 'aspect-[16/9]', transformStr: 'ar_16:9,c_fill,g_face,w_600' };
+    case '3:4':
+    default:
+      return { aspectClass: 'aspect-[3/4]', transformStr: 'ar_3:4,c_fill,g_face,w_600' };
+  }
+};
 
 export default function Home() {
   const [banners, setBanners] = useState([]);
@@ -22,6 +39,21 @@ export default function Home() {
   const [activeThumbnailIndex, setActiveThumbnailIndex] = useState(0);
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const navigate = useNavigate();
+  const scrollRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -196,6 +228,9 @@ export default function Home() {
           initial={{ scaleY: 0, opacity: 0 }}
           animate={{ scaleY: 1, opacity: 1 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          onAnimationComplete={() => {
+            window.scrollTo(0, 0);
+          }}
           style={{ transformOrigin: 'top center' }}
           className="relative w-full min-h-[50vh] md:h-[65vh] flex flex-col md:flex-row bg-brand-cream overflow-hidden border-b border-brand-border/40 select-none"
         >
@@ -525,7 +560,7 @@ export default function Home() {
 
                       <motion.div 
                         variants={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } } }}
-                        className={`font-display leading-[1.05] ${textColor} flex flex-col space-y-1`}
+                        className={`font-display leading-[1.2] ${textColor} flex flex-col space-y-2.5`}
                       >
                         <span className="text-3xl sm:text-4xl md:text-[3.2rem] lg:text-[4rem] tracking-tight font-medium drop-shadow-sm">{titleFirstPart}</span>
                         {titleSecondPart && <span className="text-3xl sm:text-4xl md:text-[3.2rem] lg:text-[4rem] italic text-brand-gold font-light">{titleSecondPart}</span>}
@@ -635,73 +670,78 @@ export default function Home() {
         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-brand-gold/30 to-transparent mt-[-1px]"></div>
       </div>
 
-      {/* 2. CATEGORY GRID (Luxury layout) */}
+      {/* 2. CATEGORY EDITORIAL GRID */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
         variants={staggerContainer}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-24 text-center select-none"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center select-none font-sans"
       >
-        <motion.h2 variants={fadeInUp} className="font-display text-3xl sm:text-4xl text-brand-dark tracking-wide font-bold uppercase">
+        <motion.span variants={fadeInUp} className="text-2xs uppercase tracking-widest font-bold text-brand-gold">Handpicked Curations</motion.span>
+        <motion.h2 variants={fadeInUp} className="font-sans text-2xl sm:text-3xl text-brand-dark tracking-tight font-bold mt-1 text-center">
           {settings?.homeCategoryHeading || 'Shop by Category'}
         </motion.h2>
-        <motion.div variants={fadeInUp} className="luxury-divider mx-auto" />
-        <motion.p variants={fadeInUp} className="text-sm text-brand-muted/80 max-w-lg mx-auto mb-12 leading-relaxed">
+        <motion.p variants={fadeInUp} className="text-xs sm:text-sm text-brand-muted/80 max-w-lg mx-auto mb-10 leading-relaxed font-normal">
           {settings?.homeCategoryDescription || 'Handcrafted fabrics tailored for festive sparkle, weddings, daily charm, and special moments.'}
         </motion.p>
 
-        <motion.div variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-          {activeCategories.map((cat, i) => (
-            <motion.div variants={scaleUp} key={i}>
-              <Link
-                to={`/shop?category=${cat.slug}`}
-                className="group relative aspect-[3/4] rounded-sm overflow-hidden block h-full bg-brand-dark"
-              >
-                <img
-                  src={cat.imageUrl}
-                  alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 opacity-90 group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-                <div className="absolute inset-0 p-6 flex flex-col items-center justify-end">
-                  <span className="font-display text-white text-xl sm:text-2xl font-medium tracking-wide transform transition-transform duration-500 group-hover:-translate-y-1">
-                    {cat.name}
-                  </span>
-                  <div className="overflow-hidden h-0 opacity-0 group-hover:h-5 group-hover:opacity-100 transition-all duration-500 ease-in-out transform -translate-y-2 group-hover:translate-y-0 mt-1">
-                     <span className="text-[10px] uppercase tracking-widest font-sans text-white/90 border-b border-white/50 pb-0.5">
-                       Discover
-                     </span>
-                  </div>
-                </div>
-              </Link>
+        {(() => {
+          const limit = settings?.homeCategoryLimit || 4;
+          const categoriesToShow = activeCategories.slice(0, limit);
+          const { aspectClass, transformStr } = getCategoryLayoutDetails(settings?.homeCategoryAspectRatio || '3:4');
+
+          const getCategoryDesc = (slug, idx) => {
+            if (slug === 'silk-sarees') return 'Handwoven elegance for weddings and celebrations.';
+            if (slug === 'georgette-sarees') return 'Lightweight fabrics for festive occasions.';
+            if (slug === 'cord-sets') return 'Modern styles for effortless fashion.';
+            if (slug === 'kurtis') return 'Comfort meets everyday elegance.';
+            return `Discover our handpicked premium selection of ${categoriesToShow[idx]?.name || 'items'}.`;
+          };
+
+          const gridColsClass = 
+            categoriesToShow.length === 2 ? 'grid-cols-2' : 
+            categoriesToShow.length === 3 ? 'grid-cols-2 md:grid-cols-3' : 
+            categoriesToShow.length === 5 ? 'grid-cols-2 md:grid-cols-5' : 
+            'grid-cols-2 md:grid-cols-4';
+
+          return (
+            <motion.div variants={staggerContainer} className={`grid ${gridColsClass} gap-6`}>
+              {categoriesToShow.map((cat, idx) => (
+                <motion.div variants={scaleUp} key={cat._id || idx}>
+                  <CategoryEditorialCard 
+                    category={cat} 
+                    description={getCategoryDesc(cat.slug, idx)} 
+                    heightClass={aspectClass}
+                    transformation={transformStr}
+                  />
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
-        </motion.div>
+          );
+        })()}
       </motion.section>
 
-      {/* 3. FEATURED PRODUCTS COLLECTION (Increased vertical padding) */}
+      {/* 3. FEATURED PRODUCTS COLLECTION */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
         variants={staggerContainer}
-        className="bg-brand-white border-t border-b border-brand-border/40 py-20 lg:py-24"
+        className="bg-brand-white border-t border-b border-brand-border/40 py-16"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-10">
+          <div className="flex justify-between items-end mb-8">
             <motion.div variants={fadeInUp} className="text-left">
-              <h2 className="font-display text-3xl text-brand-dark font-bold uppercase tracking-wide">
+              <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest font-sans block">Boutique Curations</span>
+              <h2 className="font-sans text-2xl sm:text-3xl text-brand-dark font-bold tracking-tight mt-1">
                 {settings?.homeFeaturedHeading || 'Featured Collection'}
               </h2>
-              <span className="text-xs text-brand-gold font-sans font-bold uppercase tracking-widest mt-1 block">
-                {settings?.homeFeaturedSubheading || 'Premium Wardrobe Curations'}
-              </span>
             </motion.div>
             <motion.div variants={fadeInUp}>
-              <Link to="/shop" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-crimson hover:text-brand-gold flex items-center space-x-1.5 transition-colors">
-                <span>View All</span>
-                <ArrowRight size={14} />
+              <Link to="/shop" className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-brand-crimson hover:text-brand-gold flex items-center space-x-1 transition-colors">
+                <span>View All Products</span>
+                <ArrowRight size={12} />
               </Link>
             </motion.div>
           </div>
@@ -709,14 +749,14 @@ export default function Home() {
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map(n => (
-                <div key={n} className="aspect-[3/4] skeleton-shimmer rounded-xl" />
+                <div key={n} className="aspect-[2/3] skeleton-shimmer rounded-xl" />
               ))}
             </div>
           ) : collections.featured.length > 0 ? (
             <motion.div variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               {collections.featured.slice(0, 4).map(prod => (
                 <motion.div variants={fadeInUp} key={prod._id}>
-                  <ProductCard
+                  <FeaturedProductCard
                     product={prod}
                     onQuickView={(p) => setQuickViewProduct(p)}
                   />
@@ -724,306 +764,413 @@ export default function Home() {
               ))}
             </motion.div>
           ) : (
-            <p className="text-brand-muted text-sm text-center py-6">Add featured products from the admin panel to showcase here!</p>
+            <p className="text-brand-muted text-xs text-center py-6">Add featured products from the admin panel to showcase here!</p>
           )}
         </div>
       </motion.section>
 
-      {/* 4. PROMOTIONAL SPLIT BANNER (Enhanced typography and spacing) */}
-      <motion.section 
+      {/* 4. BOUTIQUE STORY SECTION */}
+      {settings?.homeStoryActive !== false && (
+        <motion.section
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={staggerContainer}
+          className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            <motion.div variants={scaleUp} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-brand-border/30 shadow-md bg-brand-dark">
+              {settings?.homeStoryMediaType === 'video' && settings?.homeStoryVideoUrl ? (
+                <video 
+                  src={settings.homeStoryVideoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img 
+                  src={settings?.homeStoryImageUrl || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800"} 
+                  alt="Artisanal Handloom Weaving" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              )}
+              <div className="absolute inset-0 bg-brand-dark/10" />
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="text-left space-y-5">
+              <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest">
+                {settings?.homeStoryTagline || 'Heritage & Craftsmanship'}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-brand-dark">
+                {settings?.homeStoryHeading || 'Our Story'}
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-muted leading-relaxed font-normal">
+                {settings?.homeStoryDescription || 'At Swastika Sarees, every piece is selected with meticulous attention to craftsmanship, fabric quality, and timeless elegance. We bridge the gap between traditional Indian master weavers and the modern contemporary woman.'}
+              </p>
+              {(settings?.homeStoryQuote || settings?.homeStoryAuthor) && (
+                <blockquote className="border-l-2 border-brand-gold pl-4 text-xs italic text-brand-dark/80 font-serif leading-relaxed">
+                  "{settings.homeStoryQuote || 'We believe in preserving the rich heritage of Indian textiles while designing comfortable, drape-friendly wear for life\'s special occasions.'}"
+                  {settings.homeStoryAuthor && (
+                    <span className="block mt-1.5 text-2xs uppercase tracking-wider text-brand-gold font-sans font-bold">— {settings.homeStoryAuthor}</span>
+                  )}
+                </blockquote>
+              )}
+              <div className="pt-2">
+                <Link 
+                  to="/about" 
+                  className="inline-flex items-center space-x-1.5 bg-brand-dark hover:bg-brand-crimson text-brand-cream text-[10px] font-bold uppercase tracking-wider px-5 py-3 rounded transition-colors shadow-sm"
+                >
+                  <span>Read More About Us</span>
+                  <ArrowRight size={12} />
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
+      )}
+
+      {/* 5. FABRIC GUIDE */}
+      <motion.section
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
-        variants={blurReveal}
-        className="w-full bg-brand-dark text-brand-cream flex flex-col md:flex-row overflow-hidden border-t-2 border-b-2 border-brand-gold/30"
+        variants={staggerContainer}
+        className="bg-brand-cream/40 border-t border-b border-brand-border/40 py-16 font-sans text-center"
       >
-        {/* Left block */}
-        <div className="w-full md:w-1/2 p-10 sm:p-20 flex flex-col justify-center text-left space-y-5 relative">
-          <div className="absolute inset-0 ambient-glow-bg z-0" />
-          <div className="relative z-10">
-            <span className="text-brand-gold font-sans font-bold tracking-widest text-xs uppercase">Bespoke Boutique Experience</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight uppercase tracking-wide mt-2">
-              {settings?.homePromoHeading || 'Handpicked. Curated. Yours.'}
-            </h2>
-            <p className="font-sans text-sm text-brand-cream/70 leading-relaxed max-w-md mt-4">
-              {settings?.homePromoDescription || 'Unsure of fabric weight, shade match, or sizes? Skip the queue and consult directly with our catalog experts on WhatsApp for product videos, customized sizing checkups, and COD booking services.'}
-            </p>
-          <div className="pt-2">
-            <a
-              href={`https://wa.me/${settings?.whatsAppNumber || '919999999999'}?text=Hi!%20I'm%20interested%20in%20shopping%20at%20Swastika%20Sarees.%20Could%20you%20share%20the%20latest%20arrivals%20catalog?%20🙏`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-6 py-3.5 rounded text-xs font-semibold uppercase tracking-widest transition-colors shadow-lg"
-            >
-              <MessageSquare size={14} />
-              <span>Consult via WhatsApp</span>
-            </a>
-          </div>
-          </div>
-        </div>
-        
-        {/* Right block: collage/grid of 3 mock images */}
-        <div className="w-full md:w-1/2 grid grid-cols-3 aspect-video md:aspect-auto md:min-h-[420px]">
-          <div className="h-full overflow-hidden">
-            <img src={settings?.homePromoImage1 || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=350"} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-          <div className="h-full overflow-hidden border-l border-r border-brand-gold/20">
-            <img src={settings?.homePromoImage2 || "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=350"} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-          <div className="h-full overflow-hidden">
-            <img src={settings?.homePromoImage3 || "https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=350"} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.span variants={fadeInUp} className="text-2xs text-brand-gold font-bold uppercase tracking-widest">Textile Selection Guide</motion.span>
+          <motion.h2 variants={fadeInUp} className="text-2xl sm:text-3xl font-bold tracking-tight text-brand-dark mt-1">Choose the Perfect Fabric</motion.h2>
+          <motion.p variants={fadeInUp} className="text-xs sm:text-sm text-brand-muted/80 max-w-md mx-auto mb-10 font-normal">
+            Understand how each drape behaves so you look and feel your absolute best on every occasion.
+          </motion.p>
+
+          <motion.div variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/30 p-6 rounded-2xl hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mb-4">
+                <Sparkles size={20} />
+              </div>
+              <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wide mb-1">Pure Silk</h4>
+              <span className="text-[10px] font-semibold text-brand-gold uppercase tracking-wider block mb-2">Wedding & Traditional</span>
+              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed font-normal">
+                Rich, lustrous texture with a sturdy hold. Perfect for marriages, traditional pujas, and heirloom collections.
+              </p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/30 p-6 rounded-2xl hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mb-4">
+                <Layers size={20} />
+              </div>
+              <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wide mb-1">Mulmul Cotton</h4>
+              <span className="text-[10px] font-semibold text-brand-gold uppercase tracking-wider block mb-2">Daily Comfort</span>
+              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed font-normal">
+                Ultra-breathable, lightweight, and skin-friendly. Hand-loomed for regular and high-summer comfort.
+              </p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/30 p-6 rounded-2xl hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mb-4">
+                <Wind size={20} />
+              </div>
+              <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wide mb-1">Georgette</h4>
+              <span className="text-[10px] font-semibold text-brand-gold uppercase tracking-wider block mb-2">Festive Wear</span>
+              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed font-normal">
+                Flowing, soft silhouette with an elegant bounce. Resists wrinkles, draping beautifully for evening dinners.
+              </p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/30 p-6 rounded-2xl hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mb-4">
+                <Scissors size={20} />
+              </div>
+              <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wide mb-1">Luxury Organza</h4>
+              <span className="text-[10px] font-semibold text-brand-gold uppercase tracking-wider block mb-2">Luxury Events</span>
+              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed font-normal">
+                Sheer, crisp finish that holds an elegant flare. Provides a modern, high-fashion structural drape for cocktail parties.
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
       </motion.section>
 
-      {/* 5. NEW ARRIVALS GRID (Increased spacing) */}
+      {/* 6. NEW ARRIVALS HORIZONTAL SCROLL CAROUSEL */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
         variants={staggerContainer}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-24"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 font-sans select-none relative"
       >
-        <div className="flex justify-between items-end mb-10 border-b border-brand-border/30 pb-4">
-          <motion.div variants={fadeInUp} className="text-left">
-            <h2 className="font-display text-3xl text-brand-dark font-bold uppercase tracking-wide">New Arrivals</h2>
-            <span className="text-xs text-brand-gold font-sans font-bold uppercase tracking-widest mt-1 block">Unveil The Season's Best</span>
-          </motion.div>
-          <motion.div variants={fadeInUp}>
-            <Link to="/shop?sort=newest" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-crimson hover:text-brand-gold flex items-center space-x-1.5 transition-colors">
-              <span>View All New</span>
-              <ArrowRight size={14} />
-            </Link>
-          </motion.div>
+        <div className="flex justify-between items-end mb-8">
+          <div className="text-left">
+            <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest block">Unveil The Season's Best</span>
+            <h2 className="text-2xl sm:text-3xl text-brand-dark font-bold tracking-tight mt-1">New Arrivals</h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={scrollLeft}
+              className="p-2 rounded-full border border-brand-border bg-brand-white text-brand-dark hover:bg-brand-cream hover:text-brand-crimson transition-colors shadow-xs"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={scrollRight}
+              className="p-2 rounded-full border border-brand-border bg-brand-white text-brand-dark hover:bg-brand-cream hover:text-brand-crimson transition-colors shadow-xs"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(n => <div key={n} className="aspect-[3/4] skeleton-shimmer rounded-xl" />)}
+          <div className="flex space-x-6 overflow-x-hidden">
+            {[1, 2, 3, 4].map(n => <div key={n} className="w-[280px] shrink-0 aspect-[2/3] skeleton-shimmer rounded-xl" />)}
           </div>
         ) : collections.newArrivals.length > 0 ? (
-          <motion.div variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            {collections.newArrivals.slice(0, 4).map(prod => (
-              <motion.div variants={fadeInUp} key={prod._id}>
-                <ProductCard product={prod} onQuickView={(p) => setQuickViewProduct(p)} />
-              </motion.div>
+          <div 
+            ref={scrollRef}
+            className="flex flex-row overflow-x-auto gap-6 snap-x snap-mandatory scroll-smooth scrollbar-none pb-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {collections.newArrivals.map(prod => (
+              <div key={prod._id} className="w-[260px] sm:w-[280px] shrink-0 snap-start">
+                <FeaturedProductCard product={prod} onQuickView={(p) => setQuickViewProduct(p)} />
+              </div>
             ))}
-          </motion.div>
+          </div>
         ) : (
-          <p className="text-brand-muted text-sm text-center py-6">Check back soon for new arrivals!</p>
+          <p className="text-brand-muted text-xs text-center py-6">Check back soon for new arrivals!</p>
         )}
       </motion.section>
 
-      {/* 6. BESTSELLERS (Increased spacing and cream background) */}
+      {/* 7. CUSTOMER TESTIMONIALS */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
         variants={staggerContainer}
-        className="bg-brand-cream/45 border-t border-b border-brand-border/40 py-20 lg:py-24"
+        className="bg-brand-cream/35 border-t border-b border-brand-border/40 py-16 text-center select-none font-sans"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-10 border-b border-brand-border/30 pb-4">
-            <motion.div variants={fadeInUp} className="text-left">
-              <h2 className="font-display text-3xl text-brand-dark font-bold uppercase tracking-wide">Bestsellers</h2>
-              <span className="text-xs text-brand-gold font-sans font-bold uppercase tracking-widest mt-1 block">Customer Favorites</span>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Link to="/shop?sort=popular" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-crimson hover:text-brand-gold flex items-center space-x-1.5 transition-colors">
-                <span>View All Bestselling</span>
-                <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-          </div>
+          <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest">Voices of Swastika Clients</span>
+          <h2 className="text-2xl sm:text-3xl text-brand-dark tracking-tight font-bold mt-1">Praise & Reviews</h2>
+          <div className="luxury-divider mx-auto my-6" />
 
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map(n => <div key={n} className="aspect-[3/4] skeleton-shimmer rounded-xl" />)}
-            </div>
-          ) : collections.bestsellers.length > 0 ? (
-            <motion.div variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-              {collections.bestsellers.slice(0, 4).map(prod => (
-                <motion.div variants={fadeInUp} key={prod._id}>
-                  <ProductCard product={prod} onQuickView={(p) => setQuickViewProduct(p)} />
-                </motion.div>
-              ))}
+          <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/20 p-6 rounded-2xl shadow-xs">
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1594744803329-e58b31de215f?auto=format&fit=crop&q=80&w=100" 
+                  alt="Priya" 
+                  className="w-10 h-10 rounded-full object-cover border border-brand-border/30"
+                  loading="lazy"
+                />
+                <div>
+                  <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wider">Priya R.</h4>
+                  <span className="text-xs text-brand-gold uppercase font-semibold">Hyderabad</span>
+                </div>
+              </div>
+              <div className="flex text-brand-gold mb-3">
+                {[...Array(5)].map((_, i) => <Star key={i} size={11} fill="currentColor" className="mr-0.5" />)}
+              </div>
+              <p className="text-xs sm:text-sm text-brand-muted leading-relaxed font-normal italic">
+                "The embroidery was even better than the photos. The silk weave feels extremely premium, and the weight is exactly what I needed for the wedding function."
+              </p>
             </motion.div>
-          ) : (
-            <p className="text-brand-muted text-sm text-center py-6">Add bestselling products to display here!</p>
-          )}
-        </div>
-      </motion.section>
 
-      {/* 7. WHY CHOOSE US (Luxury Refinement) */}
-      <motion.section 
-        initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={staggerContainer}
-        className="bg-brand-cream border-b border-brand-border/30 py-20 lg:py-24 text-center select-none relative"
-      >
-        <div className="absolute inset-0 ambient-glow-bg" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.h2 variants={fadeInUp} className="font-display text-3xl text-brand-dark font-bold uppercase tracking-wide mb-2">Boutique Guarantee</motion.h2>
-          <motion.div variants={fadeInUp} className="luxury-divider mx-auto" />
-          
-          <motion.div variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            <motion.div variants={fadeInUp} className="flex flex-col items-center p-6 bg-brand-white rounded-xl shadow-xs border border-brand-border/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-              <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-full mb-4">
-                <ShieldCheck size={28} />
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/20 p-6 rounded-2xl shadow-xs">
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" 
+                  alt="Anjali" 
+                  className="w-10 h-10 rounded-full object-cover border border-brand-border/30"
+                  loading="lazy"
+                />
+                <div>
+                  <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wider">Anjali S.</h4>
+                  <span className="text-xs text-brand-gold uppercase font-semibold">Mumbai</span>
+                </div>
               </div>
-              <h4 className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1.5 uppercase tracking-wide">Handpicked Quality</h4>
-              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed">Each piece is individually checked for weave defects and stitching detail.</p>
+              <div className="flex text-brand-gold mb-3">
+                {[...Array(5)].map((_, i) => <Star key={i} size={11} fill="currentColor" className="mr-0.5" />)}
+              </div>
+              <p className="text-xs sm:text-sm text-brand-muted leading-relaxed font-normal italic">
+                "Consulting the team on WhatsApp was so helpful. They shared live videos of the fabric structure, making it super easy to match my blouse shade before purchasing!"
+              </p>
             </motion.div>
-            
-            <motion.div variants={fadeInUp} className="flex flex-col items-center p-6 bg-brand-white rounded-xl shadow-xs border border-brand-border/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-              <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-full mb-4">
-                <Truck size={28} />
+
+            <motion.div variants={fadeInUp} className="bg-brand-white border border-brand-border/20 p-6 rounded-2xl shadow-xs">
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=100" 
+                  alt="Kiran" 
+                  className="w-10 h-10 rounded-full object-cover border border-brand-border/30"
+                  loading="lazy"
+                />
+                <div>
+                  <h4 className="text-sm font-bold text-brand-dark uppercase tracking-wider">Kiran J.</h4>
+                  <span className="text-xs text-brand-gold uppercase font-semibold">New Delhi</span>
+                </div>
               </div>
-              <h4 className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1.5 uppercase tracking-wide">Pan-India Shipping</h4>
-              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed">Free standard shipping on cart totals above ₹999 anywhere in India.</p>
-            </motion.div>
- 
-            <motion.div variants={fadeInUp} className="flex flex-col items-center p-6 bg-brand-white rounded-xl shadow-xs border border-brand-border/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-              <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-full mb-4">
-                <MessageSquare size={28} />
+              <div className="flex text-brand-gold mb-3">
+                {[...Array(5)].map((_, i) => <Star key={i} size={11} fill="currentColor" className="mr-0.5" />)}
               </div>
-              <h4 className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1.5 uppercase tracking-wide">WhatsApp Support</h4>
-              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed">Get assistance in choosing designs, variants, and colors via video consult.</p>
-            </motion.div>
- 
-            <motion.div variants={fadeInUp} className="flex flex-col items-center p-6 bg-brand-white rounded-xl shadow-xs border border-brand-border/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-              <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-full mb-4">
-                <RotateCcw size={28} />
-              </div>
-              <h4 className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1.5 uppercase tracking-wide">Easy Returns</h4>
-              <p className="text-2xs sm:text-xs text-brand-muted leading-relaxed">Not happy with weight or color? Return within 7 days of delivery.</p>
+              <p className="text-xs sm:text-sm text-brand-muted leading-relaxed font-normal italic">
+                "Ordered a georgette set and was amazed at the quick delivery. The packaging is absolutely luxury tier. Perfect for gift giving, or just treating yourself!"
+              </p>
             </motion.div>
           </motion.div>
         </div>
       </motion.section>
 
-      {/* 8. CUSTOMER REVIEWS (Testimonial Carousel) */}
+      {/* 8. BOUTIQUE GUARANTEE (7 Compact Elegant Cards) */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
-        variants={slideUpFade}
-        className="bg-brand-white border-t border-b border-brand-border/40 py-20 lg:py-24 text-center select-none overflow-hidden relative"
+        variants={staggerContainer}
+        className="bg-brand-white py-16 text-center select-none font-sans"
       >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl sm:text-4xl text-brand-dark tracking-wide font-bold uppercase">Praise & Reviews</h2>
-          <div className="luxury-divider" />
-          
-          <div className="relative min-h-[220px] flex items-center justify-center mt-6">
-            {activeReviews.map((rev, idx) => (
-              <div
-                key={idx}
-                className={`absolute inset-x-0 transition-all duration-[800ms] ease-in-out flex flex-col items-center justify-center ${
-                  activeReviewIndex === idx ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 pointer-events-none z-0'
-                }`}
-              >
-                <div className="flex text-brand-gold justify-center mb-6">
-                  {[...Array(rev.rating)].map((_, i) => <Star key={i} size={16} fill="currentColor" className="mx-0.5" />)}
-                </div>
-                <blockquote className="text-base sm:text-lg md:text-xl text-brand-dark italic max-w-2xl font-serif leading-relaxed px-4 text-center">
-                  "{rev.comment}"
-                </blockquote>
-                <div className="mt-6 flex flex-col items-center">
-                  <span className="text-xs sm:text-sm font-bold text-brand-dark tracking-wider uppercase">{rev.customerName}</span>
-                  <span className="text-[10px] text-brand-gold font-sans font-bold uppercase tracking-widest mt-1">Verified Purchaser — {rev.product?.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest">Our Service Commitment</span>
+          <h2 className="text-2xl sm:text-3xl text-brand-dark tracking-tight font-bold mt-1">Boutique Guarantee</h2>
+          <div className="luxury-divider mx-auto my-6" />
 
-          {/* Testimonial Controls */}
-          {activeReviews.length > 1 && (
-            <div className="flex justify-center items-center space-x-3.5 mt-8">
-              <button
-                onClick={() => setActiveReviewIndex(prev => (prev - 1 + activeReviews.length) % activeReviews.length)}
-                className="p-2 rounded-full border border-brand-border/40 hover:border-brand-gold hover:text-brand-gold text-brand-muted transition-colors duration-300 flex items-center justify-center"
-                aria-label="Previous Review"
-              >
-                &#10094;
-              </button>
-              {activeReviews.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveReviewIndex(i)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    activeReviewIndex === i ? 'bg-brand-gold w-5' : 'bg-brand-border/50'
-                  }`}
-                  aria-label={`Go to review ${i + 1}`}
-                />
-              ))}
-              <button
-                onClick={() => setActiveReviewIndex(prev => (prev + 1) % activeReviews.length)}
-                className="p-2 rounded-full border border-brand-border/40 hover:border-brand-gold hover:text-brand-gold text-brand-muted transition-colors duration-300 flex items-center justify-center"
-                aria-label="Next Review"
-              >
-                &#10095;
-              </button>
-            </div>
-          )}
+          <motion.div variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 text-center">
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <Sparkles size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Handpicked Fabrics</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Individually checked for weave details.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <Scissors size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Premium Stitching</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Crafted with reinforced tailored seams.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <Lock size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Secure Payments</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">100% safe checkout with Razorpay.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <Truck size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Pan India Shipping</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Free delivery on orders above ₹999.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <RotateCcw size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Easy Returns</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Hassle-free return policy within 7 days.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <MessageSquare size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Styling Support</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Video or chat consultation with catalog stylist.</p>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="bg-brand-cream/30 border border-brand-border/35 p-4 rounded-xl flex flex-col items-center hover:scale-[1.03] transition-transform duration-300">
+              <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-full mb-2">
+                <Gift size={16} />
+              </div>
+              <h4 className="text-xs sm:text-[13px] font-bold text-brand-dark uppercase tracking-wide mb-1">Gift Packaging</h4>
+              <p className="text-[11px] text-brand-muted leading-snug font-normal">Beautiful premium boxes for your drapes.</p>
+            </motion.div>
+          </motion.div>
         </div>
       </motion.section>
 
-      {/* 9. INSTAGRAM FEED STRIP */}
+      {/* 9. INSTAGRAM ORGANIC FEED SECTION */}
       <motion.section 
         initial="initial"
         whileInView="whileInView"
         viewport={{ once: true, margin: "-50px" }}
-        variants={fadeScale}
-        className="bg-brand-white border-t border-brand-border/40 py-20 lg:py-24 text-center select-none"
+        variants={staggerContainer}
+        className="bg-brand-cream/30 border-t border-brand-border/40 py-16 text-center select-none font-sans"
       >
-        <h2 className="font-display text-2xl text-brand-dark font-bold uppercase tracking-wide mb-1">Follow Us On Instagram</h2>
-        <a
-          href="https://instagram.com/swastikasarees_"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs sm:text-sm text-brand-crimson font-bold hover:text-brand-gold uppercase tracking-widest transition-colors"
-        >
-          @swastikasarees_
-        </a>
-        
-        {/* Instagram Post Grid */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3.5 mt-8 max-w-7xl mx-auto px-4">
-          {[
-            'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=200',
-            'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=200',
-            'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=200',
-            'https://images.unsplash.com/photo-1598530028795-0e68f863a8a3?auto=format&fit=crop&q=80&w=200',
-            'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=200',
-            'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=200'
-          ].map((src, i) => (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center max-w-lg mx-auto mb-10">
+            <span className="text-2xs text-brand-gold font-bold uppercase tracking-widest font-sans">Social Gallery</span>
+            <h2 className="text-2xl sm:text-3xl text-brand-dark tracking-tight font-bold mt-1">Tag Us to Get Featured</h2>
+            <p className="text-sm sm:text-base text-brand-muted font-normal mt-2 leading-relaxed">
+              Join our growing family! Post a photo wearing Swastika drapes and tag us for a chance to be showcased in our lookbook.
+            </p>
+            
+            <a 
+              href="https://www.instagram.com/swastikasarees_" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center space-x-6 mt-4 text-sm font-semibold text-brand-dark border border-brand-border/35 bg-brand-white hover:text-brand-crimson p-3 rounded-full shadow-xs px-6 transition-colors duration-300 cursor-pointer"
+            >
+              <span>@swastikasarees_</span>
+              <span className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
+              <span>12K+ Followers</span>
+              <span className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
+              <span>420+ Posts</span>
+            </a>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[
+              { src: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-1 md:-translate-y-2' },
+              { src: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-1 md:translate-y-1' },
+              { src: 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-2 md:-translate-y-4' },
+              { src: 'https://images.unsplash.com/photo-1583391733958-d25e07fac662?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-2 md:translate-y-2' },
+              { src: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-1 md:-translate-y-1' },
+              { src: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-1 md:translate-y-3' }
+            ].map((item, i) => (
+              <a
+                key={i}
+                href="https://www.instagram.com/swastikasarees_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`relative aspect-[3/4] rounded-xl overflow-hidden group border border-brand-border/30 shadow-xs hover:shadow-lg transition-all duration-500 ease-out transform ${item.rotation}`}
+              >
+                <img 
+                  src={item.src} 
+                  alt="Instagram lookbook" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-brand-dark/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 text-brand-cream">
+                  <Instagram size={18} className="mb-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
+                  <span className="text-[11px] uppercase tracking-widest font-bold">View lookbook</span>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-12">
             <a
-              key={i}
-              href="https://instagram.com/swastikasarees_"
+              href="https://www.instagram.com/swastikasarees_"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative aspect-square rounded-lg overflow-hidden group border border-brand-border/30 shadow-2xs hover:shadow-md transition-all duration-500"
+              className="inline-flex items-center space-x-2 bg-brand-white hover:bg-brand-cream text-brand-dark border border-brand-border/60 hover:border-brand-crimson px-8 py-4 rounded-sm text-xs font-bold uppercase tracking-widest transition-colors shadow-md"
             >
-              <img src={src} alt="Instagram post thumbnail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
-              <div className="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 text-brand-cream select-none">
-                <Instagram size={20} className="mb-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
-                <span className="text-[9px] uppercase tracking-widest font-bold font-sans">View Post</span>
-              </div>
+              <Instagram size={14} className="text-brand-crimson" />
+              <span>Follow Us On Instagram</span>
             </a>
-          ))}
-        </div>
-
-        {/* Instagram Follow CTA button */}
-        <div className="mt-10">
-          <a
-            href="https://instagram.com/swastikasarees_"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 bg-brand-white hover:bg-brand-cream border border-brand-crimson/30 hover:border-brand-crimson text-brand-crimson px-7 py-3 rounded-sm text-xs font-semibold uppercase tracking-widest transition-all duration-300"
-          >
-            <Instagram size={14} />
-            <span>Follow @swastikasarees_</span>
-          </a>
+          </div>
         </div>
       </motion.section>
 
@@ -1037,8 +1184,263 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+    </div>
+  );
+}
 
 
+
+function CategoryEditorialCard({ category, description, heightClass, transformation = 'ar_3:4,c_fill,g_face' }) {
+  if (!category) return null;
+  return (
+    <Link
+      to={`/shop?category=${category.slug}`}
+      className={`group relative ${heightClass} rounded-2xl overflow-hidden block bg-brand-dark shadow-sm hover:shadow-lg transition-all duration-500`}
+    >
+      <img
+        src={getCloudinaryTransformedUrl(category.imageUrl, transformation)}
+        alt={category.name}
+        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-100"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      <div className="absolute inset-x-0 bottom-0 p-6 z-10 flex flex-row items-stretch gap-3 text-left">
+        {/* Left vertical gold bar */}
+        <div className="w-[3px] bg-brand-gold scale-y-0 opacity-0 group-hover:scale-y-100 group-hover:opacity-100 transition-all duration-500 origin-top shrink-0 rounded-xs" />
+
+        {/* Text details content */}
+        <div className="flex flex-col justify-center">
+          <span className="font-sans text-white text-lg sm:text-xl font-bold tracking-wide transition-all duration-300 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.7)]">
+            {category.name}
+          </span>
+          <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-[160px] group-hover:opacity-100 transition-all duration-500 ease-in-out">
+            <p className="font-sans text-xs sm:text-sm text-brand-cream/90 leading-relaxed font-normal mt-1.5 max-w-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+              {description}
+            </p>
+            <div className="pt-2.5">
+              <span className="inline-flex items-center text-[10px] sm:text-[11px] uppercase tracking-widest font-sans font-bold text-brand-gold drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                Explore Collection <ArrowRight size={10} className="ml-1.5" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function FeaturedProductCard({ product, onQuickView }) {
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
+  const { addItem } = useCartStore();
+  const [selectedColor, setSelectedColor] = useState(null);
+  const navigate = useNavigate();
+
+  const isSaved = isInWishlist(product._id);
+  const currentPrice = product.price / 100;
+  const originalPrice = product.originalPrice ? product.originalPrice / 100 : null;
+  const discountPercent = originalPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0;
+
+  const colorMap = new Map();
+  const defaultImages = product.mainProduct?.images?.length > 0 ? product.mainProduct.images : product.images;
+
+  if (product.mainProduct?.primaryColor?.name || product.colorName) {
+    colorMap.set(product.mainProduct?.primaryColor?.name || product.colorName, {
+      hex: product.mainProduct?.primaryColor?.hex || product.colorHex,
+      images: defaultImages
+    });
+  }
+
+  product.variants?.forEach(v => {
+    if (v.colorName && !colorMap.has(v.colorName)) {
+      colorMap.set(v.colorName, { hex: v.colorHex, images: v.images });
+    }
+  });
+
+  const colors = Array.from(colorMap.entries()).map(([name, { hex, images }]) => ({ name, hex, images }));
+  const activeColorData = selectedColor ? colorMap.get(selectedColor) : null;
+  const sourceImages = activeColorData?.images?.length > 0 ? activeColorData.images : defaultImages;
+
+  const primaryImage = sourceImages?.find(img => img.isPrimary)?.url || sourceImages?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
+  const secondaryImage = sourceImages?.find(img => !img.isPrimary && img.displayOrder > 0)?.url || sourceImages?.[1]?.url || primaryImage;
+
+  const getBadgeText = () => {
+    if (product.isBestseller) return 'Best Seller';
+    if (product.isFeatured) return "Editor's Pick";
+    if (product.stock && product.stock < 5) return 'Limited Stock';
+    if (product.isNewArrival) return 'New Arrival';
+    
+    const hash = product._id ? product._id.toString().charCodeAt(product._id.toString().length - 1) : 0;
+    const tags = ['Trending', 'Wedding Favourite', 'Premium Fabric', 'Fast Selling'];
+    return tags[hash % tags.length];
+  };
+
+  const badgeText = getBadgeText();
+
+  const getBadgeStyle = () => {
+    switch (badgeText) {
+      case 'Best Seller': return 'bg-purple-950/90 text-purple-100 border-purple-400/20';
+      case "Editor's Pick": return 'bg-amber-950/90 text-amber-100 border-amber-400/20';
+      case 'Limited Stock': return 'bg-red-950/95 text-red-100 border-red-400/20';
+      case 'New Arrival': return 'bg-emerald-950/90 text-emerald-100 border-emerald-400/20';
+      case 'Wedding Favourite': return 'bg-brand-crimson/90 text-brand-cream border-brand-gold/25';
+      default: return 'bg-brand-dark/95 text-brand-cream border-brand-border/20';
+    }
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const defaultColor = selectedColor || product.mainProduct?.primaryColor?.name || product.colorName || product.variants?.[0]?.colorName;
+    const defaultSizes = (product.mainProduct?.sizes && product.mainProduct.sizes.length > 0)
+      ? product.mainProduct.sizes
+      : product.variants?.[0]?.sizes;
+
+    const defaultSizeObj = defaultSizes?.find(s => s.stock > 0) || defaultSizes?.[0];
+    addItem({
+      product: product._id,
+      slug: product.slug,
+      name: product.name,
+      price: currentPrice + (defaultSizeObj?.extraPricePaise ? defaultSizeObj.extraPricePaise / 100 : 0),
+      quantity: 1,
+      color: defaultColor || null,
+      size: product.category?.slug !== 'sarees' ? (defaultSizeObj?.size || null) : null,
+      sku: defaultSizeObj?.variantSku || product.sku,
+      imageUrl: primaryImage,
+      stock: defaultSizeObj?.stock !== undefined ? defaultSizeObj.stock : (product.stock || 10)
+    });
+  };
+
+  return (
+    <div className="group relative bg-brand-white border border-brand-border/25 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-500 flex flex-col h-full font-sans">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-brand-cream select-none">
+        
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border rounded shadow-xs ${getBadgeStyle()}`}>
+            {badgeText}
+          </span>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist(product._id);
+          }}
+          className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full bg-brand-white/90 border border-brand-border/20 text-brand-dark hover:text-brand-crimson hover:scale-110 shadow-xs transition-all duration-300"
+          aria-label={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
+        >
+          <Heart size={12} fill={isSaved ? "currentColor" : "none"} className={isSaved ? "text-brand-crimson" : ""} />
+        </button>
+
+        <div className="w-full h-full relative cursor-pointer" onClick={() => navigate(`/product/${product.slug}`)}>
+          <img
+            src={getCloudinaryTransformedUrl(primaryImage, 'ar_2:3,c_fill,g_face,w_600,h_900')}
+            alt={product.name}
+            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
+            loading="lazy"
+          />
+          {secondaryImage && secondaryImage !== primaryImage && (
+            <img
+              src={getCloudinaryTransformedUrl(secondaryImage, 'ar_2:3,c_fill,g_face,w_600,h_900')}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"
+              loading="lazy"
+            />
+          )}
+        </div>
+
+        <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-10 px-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="flex items-center space-x-1 bg-brand-cream hover:bg-brand-crimson text-brand-dark hover:text-brand-cream text-[10px] font-bold uppercase tracking-widest px-2.5 py-2 rounded-sm shadow-md border border-brand-border/20 transition-colors"
+          >
+            <Eye size={10} />
+            <span>Quick View</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="flex items-center space-x-1 bg-brand-dark/95 hover:bg-brand-crimson text-brand-cream text-[10px] font-bold uppercase tracking-widest px-2.5 py-2 rounded-sm shadow-md border border-brand-gold/20 transition-colors"
+          >
+            <ShoppingCart size={10} />
+            <span>Add to Cart</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2 text-left bg-brand-white">
+        
+        <div className="flex justify-between items-center text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
+          <span>{product.category?.name || 'Collection'}</span>
+          <div className="flex items-center space-x-0.5 bg-brand-cream px-1.5 py-0.5 rounded border border-brand-border/25">
+            <Star size={9} fill="currentColor" className="text-brand-gold" />
+            <span className="text-brand-dark text-[10px] font-bold">{product.rating || '4.9'}</span>
+          </div>
+        </div>
+
+        <h4 className="font-sans text-sm font-bold text-brand-dark line-clamp-1 group-hover:text-brand-crimson transition-colors leading-tight">
+          {product.name}
+        </h4>
+
+        <div className="text-[11px] text-brand-muted leading-tight font-medium">
+          {product.category?.slug === 'sarees' ? (
+            <span>Fabric: {product.fabric || 'Pure Silk'} • Blouse Included</span>
+          ) : product.category?.slug === 'kurtis' ? (
+            <span>Material: {product.fabric || 'Cotton'} • Fit: A-Line Classic</span>
+          ) : (
+            <span>2-Piece Coordinated Set • {product.fabric || 'Luxury Crepe'}</span>
+          )}
+        </div>
+
+        {colors.length > 1 && (
+          <div className="flex space-x-1.5 py-1">
+            {colors.map((c, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedColor(c.name);
+                }}
+                className={`w-3 h-3 rounded-full border border-black/10 transition-all ${
+                  (selectedColor === c.name || (!selectedColor && idx === 0)) ? 'scale-120 ring-1 ring-brand-gold ring-offset-1' : 'hover:scale-110'
+                }`}
+                style={{ backgroundColor: c.hex }}
+                title={c.name}
+              />
+            ))}
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-brand-border/10 flex justify-between items-center">
+          <div className="flex items-center space-x-1.5 flex-wrap">
+            <span className="text-sm font-bold text-brand-dark">₹{currentPrice.toLocaleString('en-IN')}</span>
+            {originalPrice && (
+              <span className="text-xs text-brand-muted line-through font-medium">₹{originalPrice.toLocaleString('en-IN')}</span>
+            )}
+            {discountPercent > 0 && (
+              <span className="text-[10px] font-bold text-[#8B5A2B] border border-[#8B5A2B]/40 px-1 py-0.5 rounded-sm">
+                {discountPercent}% OFF
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleAddToCart}
+            className="p-2 rounded bg-brand-cream hover:bg-brand-crimson border border-brand-border/30 hover:border-brand-crimson text-brand-dark hover:text-brand-cream transition-colors duration-300"
+            title="Add to Cart"
+          >
+            <ShoppingCart size={13} />
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }

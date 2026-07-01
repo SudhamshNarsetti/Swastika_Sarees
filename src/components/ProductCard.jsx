@@ -25,7 +25,7 @@ export default function ProductCard({ product, onQuickView }) {
   const defaultImages = product.mainProduct?.images?.length > 0 ? product.mainProduct.images : product.images;
 
   if (product.mainProduct?.primaryColor?.name || product.colorName) {
-    colorMap.set(product.mainProduct?.primaryColor?.name || product.colorName, { 
+    colorMap.set(product.mainProduct?.primaryColor?.name || product.colorName, {
       hex: product.mainProduct?.primaryColor?.hex || product.colorHex,
       images: defaultImages
     });
@@ -45,28 +45,28 @@ export default function ProductCard({ product, onQuickView }) {
     }
   });
 
-  const colors = Array.from(colorMap.entries()).map(([name, {hex, images}]) => ({name, hex, images}));
+  const colors = Array.from(colorMap.entries()).map(([name, { hex, images }]) => ({ name, hex, images }));
 
   const activeColorData = selectedVariantColor ? colorMap.get(selectedVariantColor) : null;
   const sourceImages = activeColorData?.images?.length > 0 ? activeColorData.images : defaultImages;
-  
+
   const primaryImage = sourceImages?.find(img => img.isPrimary)?.url || sourceImages?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
   const secondaryImage = sourceImages?.find(img => !img.isPrimary && img.displayOrder > 0)?.url || sourceImages?.[1]?.url || primaryImage;
 
   if (!hasSizes) {
     totalStock = product.stock || 0;
   }
-  
+
   const isOutOfStock = totalStock === 0;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     const defaultColor = product.mainProduct?.primaryColor?.name || product.colorName || product.variants?.[0]?.colorName;
-    const defaultSizes = (product.mainProduct?.sizes && product.mainProduct.sizes.length > 0) 
-      ? product.mainProduct.sizes 
+    const defaultSizes = (product.mainProduct?.sizes && product.mainProduct.sizes.length > 0)
+      ? product.mainProduct.sizes
       : product.variants?.[0]?.sizes;
-      
+
     const defaultSizeObj = defaultSizes?.find(s => s.stock > 0) || defaultSizes?.[0];
     addItem({
       product: product._id,
@@ -113,20 +113,20 @@ export default function ProductCard({ product, onQuickView }) {
           </motion.div>
         </button>
 
-        {/* Status Badges (Top-Left Rectangular) */}
-        <div className="absolute top-4 left-0 flex flex-col space-y-1 z-30">
+        {/* Status Badges (Bottom-Left) */}
+        <div className="absolute bottom-3 left-3 flex flex-row flex-wrap gap-1.5 z-30 transition-opacity duration-300 group-hover:opacity-0">
           {product.isNewArrival && (
-            <span className="bg-[#9b6a2e] text-[#f4ecd8] text-[9px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 shadow-sm">
+            <span className="bg-[#9b6a2e] text-[#f4ecd8] text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded-sm shadow-md">
               NEW
             </span>
           )}
           {product.isBestseller && (
-            <span className="bg-[#1f0f08] text-[#f4ecd8] text-[9px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 shadow-sm">
+            <span className="bg-[#1f0f08] text-[#f4ecd8] text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded-sm shadow-md">
               BESTSELLER
             </span>
           )}
           {discountPercent > 0 && (
-            <span className="bg-brand-crimson text-brand-cream text-[9px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 shadow-sm">
+            <span className="bg-brand-crimson text-brand-cream text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded-sm shadow-md">
               SALE
             </span>
           )}
@@ -235,11 +235,10 @@ export default function ProductCard({ product, onQuickView }) {
                     e.stopPropagation();
                     setSelectedVariantColor(color.name);
                   }}
-                  className={`w-4 h-4 shadow-sm transition-all cursor-pointer ${
-                    selectedVariantColor === color.name 
-                      ? 'rounded-full ring-1 ring-[#5C2E2E] ring-offset-[3px] ring-offset-white scale-110' 
+                  className={`w-4 h-4 shadow-sm transition-all cursor-pointer ${selectedVariantColor === color.name
+                      ? 'rounded-full ring-1 ring-[#5C2E2E] ring-offset-[3px] ring-offset-white scale-110'
                       : 'rounded-sm border border-black/10 hover:scale-110'
-                  }`}
+                    }`}
                   style={{ backgroundColor: color.hex || '#ccc' }}
                 />
               ))}
