@@ -111,7 +111,13 @@ export default function Navbar() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => setCategories(data.filter((c) => c.isActive !== false)))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data.filter((c) => c && c.slug && c.name && c.isActive !== false));
+        } else {
+          console.error('Navbar categories fetch error: data is not an array', data);
+        }
+      })
       .catch((err) => console.error('Navbar categories fetch error:', err));
 
     fetch('/api/settings')
@@ -250,7 +256,7 @@ export default function Navbar() {
             }`}
         >
           {/* Mobile hamburger */}
-          <div className="flex md:hidden">
+          <div className="flex lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="text-brand-dark hover:text-brand-crimson p-2 rounded-md transition-colors"
@@ -261,14 +267,14 @@ export default function Navbar() {
           </div>
 
           {/* Brand Logo */}
-          <div className="flex-1 flex justify-center md:justify-start">
-            <a href="/" onClick={handleLogoClick} className="flex flex-col items-center md:items-start group select-none">
+          <div className="flex-1 flex justify-center lg:justify-start">
+            <a href="/" onClick={handleLogoClick} className="flex flex-col items-center lg:items-start group select-none">
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, scale: isScrolled ? 0.85 : 1 }}
                 style={{ transformOrigin: 'left center' }}
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="font-display text-3xl md:text-[2.1rem] font-bold tracking-tight text-brand-crimson group-hover:text-brand-gold transition-colors duration-300"
+                className="font-display text-3xl lg:text-[2.1rem] font-bold tracking-tight text-brand-crimson group-hover:text-brand-gold transition-colors duration-300"
               >
                 Swastika Sarees
               </motion.span>
@@ -284,7 +290,7 @@ export default function Navbar() {
           </div>
 
           {/* ── Desktop Navigation ── */}
-          <nav className="hidden md:flex items-center space-x-8" aria-label="Main navigation">
+          <nav className="hidden lg:flex items-center space-x-8" aria-label="Main navigation">
 
             {/* Shop — Mega Menu Trigger
                  NO onMouseLeave here; closing is handled by header's onMouseLeave.
@@ -476,7 +482,7 @@ export default function Navbar() {
       {/* Backdrop dimmer when mega menu is open (desktop only) */}
       {megaMenuOpen && (
         <div
-          className="fixed inset-0 bg-brand-dark/20 z-30 hidden md:block"
+          className="fixed inset-0 bg-brand-dark/20 z-30 hidden lg:block"
           style={{ top: isScrolled ? '56px' : '80px' }}
           onClick={() => setMegaMenuOpen(false)}
           aria-hidden="true"
@@ -531,7 +537,7 @@ export default function Navbar() {
       {/* ══ Mobile Drawer Navigation ══ */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 z-50 flex lg:hidden">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}

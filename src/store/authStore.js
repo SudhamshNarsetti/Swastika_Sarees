@@ -73,6 +73,9 @@ export const useAuthStore = create((set, get) => ({
         }
       });
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          get().logout();
+        }
         let errorMsg = 'Failed to fetch user profile';
         try {
           const contentType = response.headers.get("content-type");
@@ -120,26 +123,31 @@ export const useAuthStore = create((set, get) => ({
   login: async (email, password) => {
     set({ loading: true, error: null });
     if (!isSupabaseConfigured()) {
-      // Simulation mode: authenticate user with mock token
-      const mockToken = 'mock-customer-token';
-      localStorage.setItem('swastika_token', mockToken);
-      set({ token: mockToken });
-      try {
-        const response = await fetch('/api/users/profile', {
-          headers: {
-            'Authorization': `Bearer ${mockToken}`
+      // Validate customer credentials in simulation mode
+      if (email === 'customer@swastikasarees.com' && password === 'customer123') {
+        const mockToken = 'mock-customer-token';
+        localStorage.setItem('swastika_token', mockToken);
+        set({ token: mockToken });
+        try {
+          const response = await fetch('/api/users/profile', {
+            headers: {
+              'Authorization': `Bearer ${mockToken}`
+            }
+          });
+          const data = await response.json();
+          if (response.ok) {
+            set({ user: data, loading: false });
+            localStorage.setItem('swastika_mock_user', JSON.stringify(data));
+            return true;
+          } else {
+            throw new Error(data.error || 'Failed to initialize simulation customer profile.');
           }
-        });
-        const data = await response.json();
-        if (response.ok) {
-          set({ user: data, loading: false });
-          localStorage.setItem('swastika_mock_user', JSON.stringify(data));
-          return true;
-        } else {
-          throw new Error(data.error || 'Failed to initialize simulation customer profile.');
+        } catch (err) {
+          set({ error: err.message, loading: false });
+          return false;
         }
-      } catch (err) {
-        set({ error: err.message, loading: false });
+      } else {
+        set({ error: 'Invalid email or password.', loading: false });
         return false;
       }
     }

@@ -13,20 +13,31 @@ export const getCloudinaryTransformedUrl = (url, transformation) => {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('cloudinary.com') || !url.includes('/image/upload/')) return url;
   
-  const match = url.match(/(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
-  if (match) {
-    const prefix = match[1];
-    const rest = match[2];
+  // Match: (prefix ending in /upload/)(optional existing transformations/)(version segment /v1234/ and everything after)
+  const versionMatch = url.match(/(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(?:(.*)\/)?(v\d+\/.*)/);
+  if (versionMatch) {
+    const prefix = versionMatch[1];
+    const versionAndRest = versionMatch[3];
+    return `${prefix}${transformation}/${versionAndRest}`;
+  }
+
+  // Fallback if no version number segment is found (e.g. upload/public_id)
+  const fallbackMatch = url.match(/(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
+  if (fallbackMatch) {
+    const prefix = fallbackMatch[1];
+    const rest = fallbackMatch[2];
+    
+    // If the first segment of rest contains common transformation parameters (like c_ or w_ or h_ or ar_ or q_),
+    // we replace it. Otherwise, we prepend the transformation.
     const parts = rest.split('/');
-    if (parts[0] && parts[0].match(/^v\d+$/)) {
-      // No existing transformation
-      return `${prefix}${transformation}/${rest}`;
-    } else {
-      // Existing transformation exists, replace it
+    if (parts[0] && (parts[0].includes('_') || parts[0].includes(':') || parts[0].includes(','))) {
       parts[0] = transformation;
       return `${prefix}${parts.join('/')}`;
+    } else {
+      return `${prefix}${transformation}/${rest}`;
     }
   }
+  
   return url;
 };
 
@@ -39,17 +50,24 @@ export const getCloudinaryTransformedUrl = (url, transformation) => {
 export const removeCloudinaryTransformation = (url) => {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('cloudinary.com') || !url.includes('/image/upload/')) return url;
-  
-  const match = url.match(/(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
-  if (match) {
-    const prefix = match[1];
-    const rest = match[2];
+
+  const versionMatch = url.match(/(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(?:(.*)\/)?(v\d+\/.*)/);
+  if (versionMatch) {
+    const prefix = versionMatch[1];
+    const versionAndRest = versionMatch[3];
+    return `${prefix}${versionAndRest}`;
+  }
+
+  const fallbackMatch = url.match(/(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
+  if (fallbackMatch) {
+    const prefix = fallbackMatch[1];
+    const rest = fallbackMatch[2];
     const parts = rest.split('/');
-    if (parts[0] && !parts[0].match(/^v\d+$/)) {
-      // It's a transformation, remove it
+    if (parts[0] && (parts[0].includes('_') || parts[0].includes(':') || parts[0].includes(','))) {
       parts.shift();
       return `${prefix}${parts.join('/')}`;
     }
   }
+
   return url;
 };

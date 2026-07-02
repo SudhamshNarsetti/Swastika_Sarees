@@ -47,6 +47,24 @@ export default function QuickViewModal({ product, onClose }) {
   if (!product) return null;
 
   const isSaved = isInWishlist(product._id);
+  
+  // Calculate computedStock based on sizes and variants
+  let hasSizes = false;
+  let computedStock = 0;
+  if (product.mainProduct?.sizes && product.mainProduct.sizes.length > 0) {
+    hasSizes = true;
+    computedStock += product.mainProduct.sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
+  }
+  product.variants?.forEach(v => {
+    if (v.sizes && v.sizes.length > 0) {
+      hasSizes = true;
+      computedStock += v.sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
+    }
+  });
+  if (!hasSizes) {
+    computedStock = product.stock || 0;
+  }
+
   const images = product.images?.length > 0
     ? product.images
     : [{ url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800" }];
@@ -75,7 +93,7 @@ export default function QuickViewModal({ product, onClose }) {
       color: selectedColor,
       size: selectedSize,
       imageUrl: images[0]?.url,
-      stock: product.stock
+      stock: computedStock
     });
     onClose();
   };
@@ -113,7 +131,7 @@ export default function QuickViewModal({ product, onClose }) {
             style={{ transition: "opacity 0.35s ease" }}
           />
 
-          {product.stock === 0 && (
+          {computedStock === 0 && (
             <div className="absolute inset-0 bg-brand-dark/15 backdrop-blur-2xs flex items-center justify-center select-none pointer-events-none z-20">
               <div className="flex flex-col items-center justify-center bg-white/90 backdrop-blur-md border border-white/20 text-brand-dark p-4 rounded-full shadow-2xl animate-float-slow" style={{ width: "120px", height: "120px" }}>
                 <AlertTriangle size={28} className="text-brand-dark animate-bounce mb-1" />
@@ -190,8 +208,8 @@ export default function QuickViewModal({ product, onClose }) {
               <span className="text-sm line-through text-gray-400 font-sans">&#8377;{originalPrice.toLocaleString("en-IN")}</span>
               <span className="text-white text-xs font-bold px-2 py-0.5 rounded-sm" style={{ background: "#C8832A" }}>{discountPercent}% OFF</span>
             </>}
-            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded border" style={product.stock > 0 ? { background: "#f0fdf4", color: "#15803d", borderColor: "#86efac" } : { background: "#fff1f2", color: "#8B1A1A", borderColor: "rgba(139,26,26,0.3)" }}>
-              {product.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded border" style={computedStock > 0 ? { background: "#f0fdf4", color: "#15803d", borderColor: "#86efac" } : { background: "#fff1f2", color: "#8B1A1A", borderColor: "rgba(139,26,26,0.3)" }}>
+              {computedStock > 0 ? "IN STOCK" : "OUT OF STOCK"}
             </span>
           </div>
 
@@ -240,13 +258,13 @@ export default function QuickViewModal({ product, onClose }) {
                 </div>
               </div>
             )}
-            {product.stock > 0 && (
+            {computedStock > 0 && (
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-800">Quantity</span>
                 <div className="flex items-center rounded-lg overflow-hidden border border-gray-200 w-32" style={{ background: "#FDF8F3" }}>
                   <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 hover:bg-gray-100 text-gray-700 transition-colors"><Minus size={14} /></button>
                   <span className="flex-1 text-center text-sm font-bold text-gray-900 font-sans">{quantity}</span>
-                  <button onClick={() => setQuantity(q => Math.min(product.stock, q + 1))} className="px-3 py-2 hover:bg-gray-100 text-gray-700 transition-colors"><Plus size={14} /></button>
+                  <button onClick={() => setQuantity(q => Math.min(computedStock, q + 1))} className="px-3 py-2 hover:bg-gray-100 text-gray-700 transition-colors"><Plus size={14} /></button>
                 </div>
               </div>
             )}
@@ -254,11 +272,11 @@ export default function QuickViewModal({ product, onClose }) {
 
           {/* CTAs */}
           <div className="flex gap-3 mb-4">
-            <button onClick={handleAddToCart} disabled={product.stock === 0}
+            <button onClick={handleAddToCart} disabled={computedStock === 0}
               className="flex-1 flex items-center justify-center gap-2 font-semibold text-sm py-3.5 rounded-xl border transition-all text-white"
-              style={{ background: product.stock === 0 ? "#9ca3af" : "#8B1A1A", borderColor: product.stock === 0 ? "transparent" : "rgba(200,131,42,0.3)", boxShadow: product.stock > 0 ? "0 4px 12px rgba(139,26,26,0.3)" : "none" }}>
+              style={{ background: computedStock === 0 ? "#9ca3af" : "#8B1A1A", borderColor: computedStock === 0 ? "transparent" : "rgba(200,131,42,0.3)", boxShadow: computedStock > 0 ? "0 4px 12px rgba(139,26,26,0.3)" : "none" }}>
               <ShoppingBag size={18} />
-              <span>{product.stock === 0 ? "Out of Stock" : "Add to Cart"}</span>
+              <span>{computedStock === 0 ? "Out of Stock" : "Add to Cart"}</span>
             </button>
             <button onClick={() => toggleWishlist(product)}
               className="p-3.5 rounded-xl border flex items-center justify-center transition-all"

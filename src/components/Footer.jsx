@@ -8,19 +8,19 @@ export default function Footer() {
   return (
     <footer className="bg-brand-dark text-brand-cream/80 pt-16 pb-8 border-t border-brand-border/20 select-none font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Foot Grid */}
-        <motion.div 
+        <motion.div
           variants={staggerContainer}
           initial="initial"
           whileInView="whileInView"
           viewport={{ once: true, margin: '-50px' }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 border-b border-brand-border/10 pb-12 mb-8"
         >
-          
+
           {/* Col 1: Brand Info */}
           <motion.div variants={staggerItem} className="space-y-4">
-            <h3 className="font-sans text-lg font-bold text-brand-cream tracking-wide">Swastika Sarees</h3>
+            <h3 className="font-sans text-2xl font-bold text-brand-cream tracking-wide">Swastika Sarees</h3>
             <p className="font-sans text-[10px] text-brand-gold uppercase tracking-wider font-semibold">"Shine Bright, Get Your Sparkle On!"</p>
             <p className="font-sans text-xs text-brand-cream/60 leading-relaxed max-w-sm">
               Discover the magnificence of handpicked, curated Indian ethnic wear. Discover sarees, kurtis, dress materials, and luxury accessories tailored to bring out your natural elegance.
@@ -28,9 +28,9 @@ export default function Footer() {
             <div className="pt-2">
               <h4 className="font-sans text-[10px] uppercase tracking-wider font-bold text-brand-gold mb-2.5">Join the Swastika Family</h4>
               <div className="flex max-w-xs">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
+                <input
+                  type="email"
+                  placeholder="Enter your email"
                   className="bg-brand-white/5 border border-brand-border/20 text-brand-cream text-xs px-3.5 py-2 rounded-l w-full focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all duration-300"
                 />
                 <button className="bg-brand-gold text-brand-dark px-3.5 py-2 rounded-r text-xs font-bold uppercase tracking-wider hover:bg-brand-cream transition-colors duration-300">
@@ -62,7 +62,7 @@ export default function Footer() {
               </motion.a>
             </div>
           </motion.div>
- 
+
           {/* Col 2: Customer Care Links */}
           <motion.div variants={staggerItem} className="space-y-4">
             <h4 className="font-sans text-[11px] uppercase tracking-wider font-bold text-brand-gold border-b border-brand-border/10 pb-1.5">Customer Care</h4>
@@ -83,7 +83,6 @@ export default function Footer() {
               <li><Link to="/shop?category=kurtis" className="hover:text-brand-gold transition-colors block">Kurtis</Link></li>
               <li><Link to="/shop?category=dress-materials" className="hover:text-brand-gold transition-colors block">Dress Materials</Link></li>
               <li><Link to="/shop?category=accessories" className="hover:text-brand-gold transition-colors block">Fashion Accessories</Link></li>
-              <li><Link to="/shop?sale=true" className="text-brand-gold-light hover:underline font-semibold block tracking-wide uppercase text-[10px]">Clearance Sale</Link></li>
             </ul>
           </motion.div>
 
@@ -108,7 +107,7 @@ export default function Footer() {
               <Clock size={14} className="text-brand-gold shrink-0 mt-0.5" />
               <div>
                 <span className="block font-semibold text-brand-cream/90 text-3xs uppercase tracking-wider font-sans">Support Hours:</span>
-                <span className="block mt-0.5 text-brand-cream/60">Mon - Sat: 10:00 AM - 7:00 PM IST</span>
+                <span className="block mt-0.5 text-brand-cream/60">Mon - Sat: 10:00 AM - 5:00 PM IST</span>
               </div>
             </div>
             <div className="pt-2 border-t border-brand-border/5 mt-3">
@@ -129,10 +128,9 @@ export default function Footer() {
             <div className="flex flex-wrap gap-2 text-2xs uppercase tracking-wider font-semibold">
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">Delhivery</span>
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">BlueDart</span>
-              <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">FedEx</span>
             </div>
           </div>
-          
+
           {/* Payments */}
           <div className="space-y-2">
             <span className="text-[10px] uppercase font-bold tracking-wider text-brand-gold block font-sans">100% Safe & Secure Checkout</span>
@@ -140,7 +138,6 @@ export default function Footer() {
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">Razorpay</span>
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">UPI</span>
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">Visa</span>
-              <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">Mastercard</span>
               <span className="px-2 py-1 bg-brand-white/5 border border-brand-border/10 rounded">RuPay</span>
             </div>
           </div>
@@ -161,8 +158,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Swastika Sarees. All Rights Reserved.
           </div>
           <div className="flex items-center space-x-1.5 mt-2 sm:mt-0">
-            <span>Made with</span>
-            <span className="text-brand-crimson animate-pulse text-xs">♥</span>
+            <span>Made </span>
             <span>in India</span>
           </div>
         </div>

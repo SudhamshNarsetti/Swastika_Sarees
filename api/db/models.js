@@ -17,7 +17,7 @@ const AddressSchema = new Schema({
 // 2. User Schema
 const UserSchema = new Schema({
   id: { type: String, required: true, unique: true }, // Maps to Supabase Auth user UUID
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   fullName: { type: String },
   phone: { type: String },
   role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
@@ -131,7 +131,6 @@ const ProductSchema = new Schema({
 
 // Index for search optimization
 ProductSchema.index({ name: 'text', description: 'text', fabric: 'text', occasionTags: 'text', styleTags: 'text' });
-ProductSchema.index({ slug: 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ isActive: 1 });
 
@@ -189,7 +188,6 @@ const OrderSchema = new Schema({
   cancelReason: { type: String }
 }, { timestamps: true });
 
-OrderSchema.index({ orderId: 1 });
 OrderSchema.index({ user: 1 });
 
 // 9. Coupon Schema

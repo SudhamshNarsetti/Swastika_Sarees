@@ -6,6 +6,13 @@ export default function ImageCropperModal({ imageUrl, onClose, onSave, isSaving 
   const imageRef = useRef(null);
   const containerRef = useRef(null);
 
+  // Append a unique query parameter to bypass browser caching of CORS headers
+  const corsImageUrl = React.useMemo(() => {
+    if (!imageUrl) return '';
+    const separator = imageUrl.includes('?') ? '&' : '?';
+    return `${imageUrl}${separator}t=${Date.now()}`;
+  }, [imageUrl]);
+
   // Crop box coordinates in percentages (0 to 100)
   const [crop, setCrop] = useState({ left: 10, top: 10, width: 60, height: 90 });
   const [isDragging, setIsDragging] = useState(false);
@@ -179,7 +186,7 @@ export default function ImageCropperModal({ imageUrl, onClose, onSave, isSaving 
     sourceImg.onerror = () => {
       alert('Failed to load image for canvas cropping. CORS settings might be blocking manual canvas edits.');
     };
-    sourceImg.src = imageUrl;
+    sourceImg.src = corsImageUrl;
   };
 
   return (
@@ -213,7 +220,7 @@ export default function ImageCropperModal({ imageUrl, onClose, onSave, isSaving 
           >
             <img 
               ref={imageRef}
-              src={imageUrl} 
+              src={corsImageUrl} 
               alt="Source Crop"
               className="max-h-[50vh] max-w-full h-auto object-contain pointer-events-none"
               crossOrigin="anonymous"

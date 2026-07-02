@@ -82,7 +82,7 @@ export default function WishlistPage() {
                   className="absolute top-3 right-3 p-1.5 rounded-full bg-brand-white/95 text-brand-crimson hover:scale-105 shadow-sm"
                   aria-label="Remove wishlist item"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={16} />
                 </button>
               </div>
 

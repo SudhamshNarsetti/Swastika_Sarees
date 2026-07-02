@@ -11,6 +11,8 @@ import { getCloudinaryTransformedUrl } from '../utils/imageHelpers';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useCartStore } from '../store/cartStore';
 
+const VIDEO_CACHE_BUSTER = Date.now();
+
 const getCategoryLayoutDetails = (aspectRatio) => {
   switch (aspectRatio) {
     case '1:1':
@@ -69,17 +71,17 @@ export default function Home() {
         if (setRes.status === 'fulfilled' && setRes.value) {
           setSettings(setRes.value);
         }
-        if (banRes.status === 'fulfilled' && banRes.value) {
-          setBanners(banRes.value);
+        if (banRes.status === 'fulfilled' && Array.isArray(banRes.value)) {
+          setBanners(banRes.value.filter(b => b && b.imageUrl && b.isActive !== false));
         }
-        if (catRes.status === 'fulfilled' && catRes.value) {
-          setCategories(catRes.value);
+        if (catRes.status === 'fulfilled' && Array.isArray(catRes.value)) {
+          setCategories(catRes.value.filter(c => c && c.slug && c.name && c.isActive !== false));
         }
         if (colRes.status === 'fulfilled' && colRes.value) {
           setCollections(colRes.value);
         }
-        if (revRes.status === 'fulfilled' && revRes.value) {
-          setReviews(revRes.value);
+        if (revRes.status === 'fulfilled' && Array.isArray(revRes.value)) {
+          setReviews(revRes.value.filter(r => r && r.customerName && r.comment));
         }
       } catch (err) {
         console.error('Failed to load home page content:', err);
@@ -271,7 +273,7 @@ export default function Home() {
           <div className="w-full md:w-1/2 relative aspect-video md:aspect-auto h-[40vh] md:h-full overflow-hidden bg-brand-dark">
             {settings.heroLandingMediaType === 'video' && settings.heroLandingVideoUrl ? (
               <video
-                src={settings.heroLandingVideoUrl}
+                src={`${settings.heroLandingVideoUrl}${settings.heroLandingVideoUrl.includes('?') ? '&' : '?'}cb=${VIDEO_CACHE_BUSTER}`}
                 autoPlay
                 loop
                 muted
@@ -708,7 +710,7 @@ export default function Home() {
           return (
             <motion.div variants={staggerContainer} className={`grid ${gridColsClass} gap-6`}>
               {categoriesToShow.map((cat, idx) => (
-                <motion.div variants={scaleUp} key={cat._id || idx}>
+                <motion.div variants={fadeInUp} key={cat._id || idx}>
                   <CategoryEditorialCard 
                     category={cat} 
                     description={getCategoryDesc(cat.slug, idx)} 
@@ -779,10 +781,10 @@ export default function Home() {
           className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-            <motion.div variants={scaleUp} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-brand-border/30 shadow-md bg-brand-dark">
+            <motion.div variants={fadeInUp} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-brand-border/30 shadow-md bg-brand-dark">
               {settings?.homeStoryMediaType === 'video' && settings?.homeStoryVideoUrl ? (
                 <video 
-                  src={settings.homeStoryVideoUrl}
+                  src={`${settings.homeStoryVideoUrl}${settings.homeStoryVideoUrl.includes('?') ? '&' : '?'}cb=${VIDEO_CACHE_BUSTER}`}
                   autoPlay
                   loop
                   muted
@@ -1198,7 +1200,7 @@ function CategoryEditorialCard({ category, description, heightClass, transformat
       className={`group relative ${heightClass} rounded-2xl overflow-hidden block bg-brand-dark shadow-sm hover:shadow-lg transition-all duration-500`}
     >
       <img
-        src={getCloudinaryTransformedUrl(category.imageUrl, transformation)}
+        src={getCloudinaryTransformedUrl(category.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=300', transformation)}
         alt={category.name}
         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-100"
         loading="lazy"

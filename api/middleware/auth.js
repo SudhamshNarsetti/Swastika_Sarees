@@ -35,6 +35,9 @@ export async function requireAuth(req, res, next) {
           phone: '918888888888',
           role: 'admin'
         });
+      } else if (dbUser.email !== 'admin@swastikasarees.com') {
+        dbUser.email = 'admin@swastikasarees.com';
+        await dbUser.save();
       }
       return next();
     }
@@ -51,6 +54,9 @@ export async function requireAuth(req, res, next) {
           phone: '917777777777',
           role: 'customer'
         });
+      } else if (dbUser.email !== 'customer@swastikasarees.com') {
+        dbUser.email = 'customer@swastikasarees.com';
+        await dbUser.save();
       }
       return next();
     }

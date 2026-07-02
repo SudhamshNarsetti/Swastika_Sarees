@@ -96,21 +96,29 @@ router.post('/', async (req, res) => {
       let variant = null;
 
       if (item.color || item.size) {
-        // Is it the main product?
-        if (dbProduct.mainProduct?.primaryColor?.name === item.color || dbProduct.colorName === item.color) {
+        const mainColor = dbProduct.mainProduct?.primaryColor?.name || dbProduct.colorName;
+        if (
+          (item.color && item.color === mainColor) ||
+          (!item.color && dbProduct.mainProduct?.sizes?.length > 0)
+        ) {
           isMainProductColor = true;
           sizeObj = dbProduct.mainProduct?.sizes?.find(s => !item.size || s.size === item.size);
         } else {
-          variant = dbProduct.variants.find(v => !item.color || v.colorName === item.color);
+          if (item.color) {
+            variant = dbProduct.variants.find(v => v.colorName === item.color);
+          } else if (dbProduct.variants?.length > 0) {
+            variant = dbProduct.variants[0];
+          }
+          
           if (variant) {
             sizeObj = variant.sizes?.find(s => !item.size || s.size === item.size);
           } else {
-             outOfStockItems.push(`${dbProduct.name} - ${item.color || ''} (Color not found)`);
+            outOfStockItems.push(`${dbProduct.name} - ${item.color || ''} (Color not found)`);
           }
         }
 
         if ((isMainProductColor || variant) && !sizeObj && item.size) {
-            outOfStockItems.push(`${dbProduct.name} - ${item.color || ''} ${item.size || ''} (Size not found)`);
+          outOfStockItems.push(`${dbProduct.name} - ${item.color || ''} ${item.size || ''} (Size not found)`);
         }
 
         if (sizeObj && sizeObj.stock < item.quantity) {
@@ -155,22 +163,39 @@ router.post('/', async (req, res) => {
     // 3. Deduct stock from database
     for (const item of dbItems) {
       // Deduct main stock
-      item.product.stock -= item.quantity;
+      item.product.stock = Math.max(0, item.product.stock - item.quantity);
 
       // Deduct specific size stock
       if (item.color || item.size) {
-        const isMainProductColor = (item.product.mainProduct?.primaryColor?.name === item.color || item.product.colorName === item.color);
-        if (isMainProductColor) {
-           const sizeObj = item.product.mainProduct?.sizes?.find(s => !item.size || s.size === item.size);
-           if (sizeObj) sizeObj.stock -= item.quantity;
+        const mainColor = item.product.mainProduct?.primaryColor?.name || item.product.colorName;
+        if (
+          (item.color && item.color === mainColor) ||
+          (!item.color && item.product.mainProduct?.sizes?.length > 0)
+        ) {
+          const sizeObj = item.product.mainProduct?.sizes?.find(s => !item.size || s.size === item.size);
+          if (sizeObj) {
+            sizeObj.stock = Math.max(0, sizeObj.stock - item.quantity);
+          }
         } else {
-           const variant = item.product.variants.find(v => !item.color || v.colorName === item.color);
-           if (variant) {
-             const sizeObj = variant.sizes?.find(s => !item.size || s.size === item.size);
-             if (sizeObj) sizeObj.stock -= item.quantity;
-           }
+          let variant = null;
+          if (item.color) {
+            variant = item.product.variants.find(v => v.colorName === item.color);
+          } else if (item.product.variants?.length > 0) {
+            variant = item.product.variants[0];
+          }
+          
+          if (variant) {
+            const sizeObj = variant.sizes?.find(s => !item.size || s.size === item.size);
+            if (sizeObj) {
+              sizeObj.stock = Math.max(0, sizeObj.stock - item.quantity);
+            }
+          }
         }
       }
+      
+      // Explicitly mark deep nested objects as modified so Mongoose tracks and persists changes
+      item.product.markModified('mainProduct');
+      item.product.markModified('variants');
       await item.product.save();
     }
 

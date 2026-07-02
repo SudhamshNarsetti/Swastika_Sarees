@@ -35,11 +35,6 @@ export default function Login() {
     e.preventDefault();
     setFormError('');
 
-    if (email.toLowerCase() === 'admin@swastikasarees.com') {
-      navigate('/admin');
-      return;
-    }
-
     if (activeTab === 'login') {
       if (!email || !password) {
         setFormError('All credentials must be filled.');
@@ -166,7 +161,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@example.com"
+                placeholder="customer@swastikasarees.com"
                 className="w-full bg-brand-cream border border-brand-border text-brand-dark pl-9 pr-3 py-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-gold"
               />
               <Mail className="absolute left-3 top-3 text-brand-muted" size={14} />

@@ -11,6 +11,7 @@ export default function OrdersHistory() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
   
@@ -22,6 +23,7 @@ export default function OrdersHistory() {
 
   const fetchOrders = async () => {
     setLoading(true);
+    setError(false);
     try {
       const response = await fetch('/api/orders/history', {
         headers: {
@@ -36,6 +38,7 @@ export default function OrdersHistory() {
       }
     } catch (e) {
       console.error(e);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -294,7 +297,21 @@ export default function OrdersHistory() {
           );
         })}
 
-        {orders.length === 0 && (
+        {error && (
+          <div className="bg-brand-white border border-brand-border p-12 rounded-2xl shadow-xs text-center flex flex-col items-center select-none font-sans">
+            <AlertCircle className="text-brand-crimson mb-3" size={36} />
+            <span className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1">Failed to Load Orders</span>
+            <p className="text-xs text-brand-muted max-w-xs mb-6">There was an error connecting to the server. Please check your internet connection and try again.</p>
+            <button
+              onClick={fetchOrders}
+              className="bg-brand-crimson text-brand-cream px-6 py-2.5 rounded-lg border border-brand-gold/30 shadow-md hover:bg-brand-muted transition-colors font-semibold text-xs"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!error && orders.length === 0 && (
           <div className="bg-brand-white border border-brand-border p-12 rounded-2xl shadow-xs text-center flex flex-col items-center">
             <Package className="text-brand-gold mb-3" size={36} />
             <span className="font-display font-semibold text-brand-dark text-sm sm:text-base mb-1">No Orders Found</span>

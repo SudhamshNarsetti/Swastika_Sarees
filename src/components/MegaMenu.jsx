@@ -106,9 +106,9 @@ export default function MegaMenu({ isOpen, categories, config, onMouseEnter, onM
         variants={containerVariants}
         className={`
           absolute left-0 right-0 top-full z-40
-          hidden md:block
+          hidden lg:block
         `}
-        style={{ pointerEvents: isOpen ? 'auto' : 'none', visibility: isOpen ? 'visible' : 'hidden' }}
+                  style={{ pointerEvents: isOpen ? 'auto' : 'none', visibility: isOpen ? 'visible' : 'hidden' }}
         role="navigation"
         aria-label="Shop categories mega menu"
         aria-hidden={!isOpen}

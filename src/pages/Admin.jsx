@@ -15,6 +15,8 @@ import { getCloudinaryTransformedUrl, removeCloudinaryTransformation } from '../
 import ImageCropperModal from '../components/admin/ImageCropperModal';
 import { Crop } from 'lucide-react';
 
+const VIDEO_CACHE_BUSTER = Date.now();
+
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useModalStore } from '../store/modalStore';
 import AdminBannerForm from '../components/admin/AdminBannerForm';
@@ -89,7 +91,7 @@ export default function Admin() {
                 type="email"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@swastikasarees.com"
+                placeholder="example@swastikasarees.com"
                 className="bg-brand-cream border border-brand-border text-brand-dark px-3 py-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-gold text-xs"
                 required
               />
@@ -1953,7 +1955,7 @@ function ProductsView({ token: tokenProp }) {
                           <div key={img.url || i} className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
                             img.isPrimary ? 'border-brand-crimson shadow-md' : 'border-brand-border hover:border-brand-gold'
                           }`} style={{ width: 80, height: 106 }}>
-                            <img src={img.url} alt="" className="w-full h-full object-cover object-top" />
+                            <img src={img.url} alt="" className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
                             
                             <button 
                               type="button" 
@@ -2257,7 +2259,7 @@ function ProductsView({ token: tokenProp }) {
                             <div key={img.url || imgIdx} className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
                               img.isPrimary ? 'border-brand-crimson shadow-md' : 'border-brand-border hover:border-brand-gold'
                             }`} style={{ width: 84, height: 112 }}>
-                              <img src={img.url} alt="" className="w-full h-full object-cover object-top" />
+                              <img src={img.url} alt="" className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
                               
                               <button 
                                 type="button" 
@@ -4687,7 +4689,7 @@ function HomepageView({ token: tokenProp }) {
               </div>
               {heroForm.heroLandingVideoUrl && (
                 <div className="mt-2 aspect-video w-full max-w-md rounded-lg overflow-hidden border border-brand-border">
-                  <video src={heroForm.heroLandingVideoUrl} controls muted className="w-full h-full object-cover" />
+                  <video src={`${heroForm.heroLandingVideoUrl}${heroForm.heroLandingVideoUrl.includes('?') ? '&' : '?'}cb=${VIDEO_CACHE_BUSTER}`} controls muted className="w-full h-full object-cover" />
                 </div>
               )}
             </div>
@@ -4896,7 +4898,7 @@ function HomepageView({ token: tokenProp }) {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div className="w-32 h-24 rounded-lg overflow-hidden border border-brand-border bg-brand-cream shrink-0 relative flex items-center justify-center">
                 {storyForm.homeStoryVideoUrl ? (
-                  <video src={storyForm.homeStoryVideoUrl} className="w-full h-full object-cover" muted playsInline />
+                  <video src={`${storyForm.homeStoryVideoUrl}${storyForm.homeStoryVideoUrl.includes('?') ? '&' : '?'}cb=${VIDEO_CACHE_BUSTER}`} className="w-full h-full object-cover" muted playsInline />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-3xs italic">No Video</div>
                 )}
