@@ -21,6 +21,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, 
 import { useModalStore } from '../store/modalStore';
 import AdminBannerForm from '../components/admin/AdminBannerForm';
 import AdminPopupSettings from '../components/admin/AdminPopupSettings';
+import AdminInstagramSettings from '../components/admin/AdminInstagramSettings';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -171,6 +172,9 @@ export default function Admin() {
 
         {/* Tab 11: Popup Settings */}
         {activeTab === 'popup' && <AdminPopupSettings token={token} />}
+
+        {/* Tab 12: Instagram Feed Settings */}
+        {activeTab === 'instagram' && <AdminInstagramSettings token={token} />}
     </AdminLayout>
   );
 }

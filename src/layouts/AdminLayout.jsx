@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard, ShoppingBag, FolderHeart, ListOrdered, Users, Ticket, Image,
-  MessageSquare, Settings, Mail, LogOut, MonitorSmartphone
+  MessageSquare, Settings, Mail, LogOut, MonitorSmartphone, Instagram
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -88,6 +88,12 @@ export default function AdminLayout({ activeTab, setActiveTab, user, logout, chi
               <MonitorSmartphone size={16} /> <span>Popup Settings</span>
             </button>
             <button
+              onClick={() => setActiveTab('instagram')}
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors ${activeTab === 'instagram' ? 'bg-brand-crimson text-brand-cream' : 'hover:bg-brand-muted/40 hover:text-brand-gold'}`}
+            >
+              <Instagram size={16} /> <span>Instagram Feed</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-brand-crimson text-brand-cream' : 'hover:bg-brand-muted/40 hover:text-brand-gold'}`}
             >
@@ -160,6 +166,7 @@ export default function AdminLayout({ activeTab, setActiveTab, user, logout, chi
               <option value="reviews">Reviews</option>
               <option value="homepage">Homepage Content</option>
               <option value="leads">Marketing Leads</option>
+              <option value="instagram">Instagram Feed</option>
               <option value="settings">Store Settings</option>
             </select>
           </div>

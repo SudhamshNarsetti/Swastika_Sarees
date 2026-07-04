@@ -270,6 +270,21 @@ const SettingSchema = new Schema({
   googleAnalyticsId: { type: String, default: '' },
   facebookPixelId: { type: String, default: '' },
   instagramUrl: { type: String, default: 'https://instagram.com/swastikasarees_' },
+  instagramPosts: {
+    type: [{
+      url: { type: String, default: 'https://instagram.com/swastikasarees_' },
+      coverPhoto: { type: String, required: true },
+      caption: { type: String, default: 'View lookbook' }
+    }],
+    default: [
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1583391733958-d25e07fac662?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+      { url: 'https://instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' }
+    ]
+  },
   whatsAppNumber: { type: String, default: '919999999999' },
   returnPolicyText: { type: String, default: 'Easy 7-day returns on unused items.' },
   shippingPolicyText: { type: String, default: 'Free shipping on orders above Rs. 999. Standard delivery in 4-7 business days.' },

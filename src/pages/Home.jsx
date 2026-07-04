@@ -1125,12 +1125,12 @@ export default function Home() {
             </p>
             
             <a 
-              href="https://www.instagram.com/swastikasarees_" 
+              href={settings?.instagramUrl || "https://www.instagram.com/swastikasarees_"} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center space-x-6 mt-4 text-sm font-semibold text-brand-dark border border-brand-border/35 bg-brand-white hover:text-brand-crimson p-3 rounded-full shadow-xs px-6 transition-colors duration-300 cursor-pointer"
             >
-              <span>@swastikasarees_</span>
+              <span>@{ (settings?.instagramUrl || "https://www.instagram.com/swastikasarees_").replace(/\/$/, '').split('/').pop() || 'swastikasarees_' }</span>
               <span className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
               <span>12K+ Followers</span>
               <span className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
@@ -1139,38 +1139,52 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { src: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-1 md:-translate-y-2' },
-              { src: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-1 md:translate-y-1' },
-              { src: 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-2 md:-translate-y-4' },
-              { src: 'https://images.unsplash.com/photo-1583391733958-d25e07fac662?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-2 md:translate-y-2' },
-              { src: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?auto=format&fit=crop&q=80&w=400', rotation: '-rotate-1 md:-translate-y-1' },
-              { src: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=400', rotation: 'rotate-1 md:translate-y-3' }
-            ].map((item, i) => (
-              <a
-                key={i}
-                href="https://www.instagram.com/swastikasarees_"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`relative aspect-[3/4] rounded-xl overflow-hidden group border border-brand-border/30 shadow-xs hover:shadow-lg transition-all duration-500 ease-out transform ${item.rotation}`}
-              >
-                <img 
-                  src={item.src} 
-                  alt="Instagram lookbook" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-brand-dark/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 text-brand-cream">
-                  <Instagram size={18} className="mb-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
-                  <span className="text-[11px] uppercase tracking-widest font-bold">View lookbook</span>
-                </div>
-              </a>
-            ))}
+            {((settings?.instagramPosts && settings.instagramPosts.length > 0)
+              ? settings.instagramPosts
+              : [
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1583391733958-d25e07fac662?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' },
+                  { url: 'https://www.instagram.com/swastikasarees_', coverPhoto: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=400', caption: 'View lookbook' }
+                ]
+            ).slice(0, 6).map((item, i) => {
+              const rotationClasses = [
+                '-rotate-1 md:-translate-y-2',
+                'rotate-1 md:translate-y-1',
+                '-rotate-2 md:-translate-y-4',
+                'rotate-2 md:translate-y-2',
+                '-rotate-1 md:-translate-y-1',
+                'rotate-1 md:translate-y-3'
+              ];
+              const rotation = rotationClasses[i % rotationClasses.length];
+              return (
+                <a
+                  key={i}
+                  href={item.url || settings?.instagramUrl || "https://www.instagram.com/swastikasarees_"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`relative aspect-[3/4] rounded-xl overflow-hidden group border border-brand-border/30 shadow-xs hover:shadow-lg transition-all duration-500 ease-out transform ${rotation}`}
+                >
+                  <img 
+                    src={item.coverPhoto} 
+                    alt="Instagram lookbook" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-brand-dark/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 text-brand-cream">
+                    <Instagram size={18} className="mb-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
+                    <span className="text-[11px] uppercase tracking-widest font-bold">{item.caption || 'View lookbook'}</span>
+                  </div>
+                </a>
+              );
+            })}
           </div>
 
           <div className="mt-12">
             <a
-              href="https://www.instagram.com/swastikasarees_"
+              href={settings?.instagramUrl || "https://www.instagram.com/swastikasarees_"}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 bg-brand-white hover:bg-brand-cream text-brand-dark border border-brand-border/60 hover:border-brand-crimson px-8 py-4 rounded-sm text-xs font-bold uppercase tracking-widest transition-colors shadow-md"
