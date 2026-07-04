@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 
 // Layout & navigation components
@@ -32,12 +32,91 @@ import NotFound from './pages/NotFound';
 // Admin CMS view
 import Admin from './pages/Admin';
 
-// Scroll to top helper on page change
+// Scroll to top or restore scroll position on page change
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigationType = useNavigationType();
+
+  // Configure browser native scroll restoration to manual
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // Save scroll position on route unmount / change or page unload
+  useEffect(() => {
+    const currentKey = pathname + search;
+    const savePosition = () => {
+      sessionStorage.setItem(`scroll_${currentKey}`, window.scrollY);
+    };
+
+    window.addEventListener('beforeunload', savePosition);
+    return () => {
+      savePosition();
+      window.removeEventListener('beforeunload', savePosition);
+    };
+  }, [pathname, search]);
+
+  // Restore scroll position on POP navigation, scroll to top on PUSH/REPLACE
+  useEffect(() => {
+    const currentKey = pathname + search;
+    if (navigationType === 'POP') {
+      const savedScrollY = sessionStorage.getItem(`scroll_${currentKey}`);
+      if (savedScrollY !== null) {
+        const targetY = parseInt(savedScrollY, 10);
+        
+        let shouldRestore = true;
+        let timeoutId;
+
+        // Cancel restoration on user interaction so we don't fight the user
+        const cancelRestoration = () => {
+          shouldRestore = false;
+        };
+
+        const interactionEvents = ['mousedown', 'wheel', 'touchstart', 'keydown'];
+        interactionEvents.forEach(event => {
+          window.addEventListener(event, cancelRestoration, { passive: true });
+        });
+
+        const performScroll = () => {
+          if (!shouldRestore) return;
+          window.scrollTo(0, targetY);
+        };
+
+        // Scroll immediately
+        performScroll();
+
+        // Observe document body size changes to keep scrolling as content loads asynchronously
+        const observer = new ResizeObserver(() => {
+          if (shouldRestore) {
+            performScroll();
+          }
+        });
+
+        observer.observe(document.body);
+
+        // Safety timeout to cleanup and stop trying after 1.5 seconds
+        timeoutId = setTimeout(() => {
+          shouldRestore = false;
+        }, 1500);
+
+        return () => {
+          shouldRestore = false;
+          clearTimeout(timeoutId);
+          observer.disconnect();
+          interactionEvents.forEach(event => {
+            window.removeEventListener(event, cancelRestoration);
+          });
+        };
+      } else {
+        window.scrollTo(0, 0);
+      }
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, search, navigationType]);
+
   return null;
 }
 

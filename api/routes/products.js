@@ -126,21 +126,24 @@ router.get('/', async (req, res) => {
     }
 
     if (search) {
-      const escapedSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      const searchRegex = new RegExp(escapedSearch, 'i');
-      const matchingCategories = await Category.find({ name: searchRegex });
-      const matchingCatIds = matchingCategories.map(c => c._id);
+      const words = search.trim().split(/\s+/).filter(Boolean);
+      for (const word of words) {
+        const escapedWord = word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const wordRegex = new RegExp(escapedWord, 'i');
+        const matchingCategories = await Category.find({ name: wordRegex });
+        const matchingCatIds = matchingCategories.map(c => c._id);
 
-      andClauses.push({
-        $or: [
-          { name: searchRegex },
-          { description: searchRegex },
-          { fabric: searchRegex },
-          { occasionTags: searchRegex },
-          { styleTags: searchRegex },
-          { category: { $in: matchingCatIds } }
-        ]
-      });
+        andClauses.push({
+          $or: [
+            { name: wordRegex },
+            { description: wordRegex },
+            { fabric: wordRegex },
+            { occasionTags: wordRegex },
+            { styleTags: wordRegex },
+            { category: { $in: matchingCatIds } }
+          ]
+        });
+      }
     }
 
     if (andClauses.length > 0) {
@@ -244,21 +247,24 @@ router.get('/filters', async (req, res) => {
       }
 
       if (search && excludeDimension !== 'search') {
-        const escapedSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        const searchRegex = new RegExp(escapedSearch, 'i');
-        const matchingCategories = await Category.find({ name: searchRegex });
-        const matchingCatIds = matchingCategories.map(c => c._id);
+        const words = search.trim().split(/\s+/).filter(Boolean);
+        for (const word of words) {
+          const escapedWord = word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+          const wordRegex = new RegExp(escapedWord, 'i');
+          const matchingCategories = await Category.find({ name: wordRegex });
+          const matchingCatIds = matchingCategories.map(c => c._id);
 
-        andClauses.push({
-          $or: [
-            { name: searchRegex },
-            { description: searchRegex },
-            { fabric: searchRegex },
-            { occasionTags: searchRegex },
-            { styleTags: searchRegex },
-            { category: { $in: matchingCatIds } }
-          ]
-        });
+          andClauses.push({
+            $or: [
+              { name: wordRegex },
+              { description: wordRegex },
+              { fabric: wordRegex },
+              { occasionTags: wordRegex },
+              { styleTags: wordRegex },
+              { category: { $in: matchingCatIds } }
+            ]
+          });
+        }
       }
 
       if (andClauses.length > 0) {
@@ -471,12 +477,64 @@ router.put('/:id', requireAdmin, async (req, res) => {
     
     // Quick stock/status update
     if (req.body.isQuickUpdate) {
-      const updated = await Product.findByIdAndUpdate(
-        prodId,
-        { isActive: req.body.isActive, stock: req.body.stock },
-        { new: true }
-      );
-      return res.json(normalizeProductImages(updated));
+      const product = await Product.findById(prodId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      product.isActive = req.body.isActive;
+      product.stock = req.body.stock;
+
+      const targetStock = req.body.stock || 0;
+
+      if (targetStock === 0) {
+        // Zero out all sizes in main product
+        if (product.mainProduct?.sizes) {
+          product.mainProduct.sizes = product.mainProduct.sizes.map(s => {
+            const sObj = s.toObject ? s.toObject() : s;
+            return { ...sObj, stock: 0 };
+          });
+        }
+        // Zero out all sizes in variants
+        if (product.variants) {
+          product.variants = product.variants.map(v => {
+            const vObj = v.toObject ? v.toObject() : v;
+            if (vObj.sizes) {
+              vObj.sizes = vObj.sizes.map(s => {
+                const sObj = s.toObject ? s.toObject() : s;
+                return { ...sObj, stock: 0 };
+              });
+            }
+            return vObj;
+          });
+        }
+      } else {
+        // Restore stock to sizes if they were zeroed out
+        if (product.mainProduct?.sizes) {
+          product.mainProduct.sizes = product.mainProduct.sizes.map(s => {
+            const sObj = s.toObject ? s.toObject() : s;
+            return { ...sObj, stock: sObj.stock > 0 ? sObj.stock : targetStock };
+          });
+        }
+        if (product.variants) {
+          product.variants = product.variants.map(v => {
+            const vObj = v.toObject ? v.toObject() : v;
+            if (vObj.sizes) {
+              vObj.sizes = vObj.sizes.map(s => {
+                const sObj = s.toObject ? s.toObject() : s;
+                return { ...sObj, stock: sObj.stock > 0 ? sObj.stock : targetStock };
+              });
+            }
+            return vObj;
+          });
+        }
+      }
+
+      product.markModified('mainProduct');
+      product.markModified('variants');
+      await product.save();
+
+      return res.json(normalizeProductImages(product));
     }
 
     const {

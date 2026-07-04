@@ -482,8 +482,7 @@ export default function Navbar() {
       {/* Backdrop dimmer when mega menu is open (desktop only) */}
       {megaMenuOpen && (
         <div
-          className="fixed inset-0 bg-brand-dark/20 z-30 hidden lg:block"
-          style={{ top: isScrolled ? '56px' : '80px' }}
+          className="absolute top-full left-0 right-0 h-[200vh] bg-brand-dark/20 z-30 hidden lg:block"
           onClick={() => setMegaMenuOpen(false)}
           aria-hidden="true"
         />

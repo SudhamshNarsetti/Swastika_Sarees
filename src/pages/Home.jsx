@@ -27,6 +27,8 @@ const getCategoryLayoutDetails = (aspectRatio) => {
   }
 };
 
+let heroAnimatedOnce = false;
+
 export default function Home() {
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -37,6 +39,14 @@ export default function Home() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+
+  const [shouldAnimateHero] = useState(() => {
+    return !heroAnimatedOnce;
+  });
+
+  useEffect(() => {
+    heroAnimatedOnce = true;
+  }, []);
 
   const [activeThumbnailIndex, setActiveThumbnailIndex] = useState(0);
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
@@ -227,37 +237,33 @@ export default function Home() {
       {/* 0. Brand-new Hero Split Landing Section (Appears above the main carousel) */}
       {settings?.heroLandingActive && (
         <motion.section 
-          initial={{ scaleY: 0, opacity: 0 }}
-          animate={{ scaleY: 1, opacity: 1 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          onAnimationComplete={() => {
-            window.scrollTo(0, 0);
-          }}
-          style={{ transformOrigin: 'top center' }}
+          initial={shouldAnimateHero ? { y: -100, opacity: 0 } : { y: 0, opacity: 1 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={shouldAnimateHero ? { duration: 1.2, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
           className="relative w-full min-h-[50vh] md:h-[65vh] flex flex-col md:flex-row bg-brand-cream overflow-hidden border-b border-brand-border/40 select-none"
         >
           {/* Left panel (Text Details & CTA) */}
           <div className="w-full md:w-1/2 p-8 sm:p-16 md:p-20 flex flex-col justify-center text-left space-y-6 z-10">
             <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
+              initial={shouldAnimateHero ? { opacity: 0, y: 30 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={shouldAnimateHero ? { duration: 0.8 } : { duration: 0 }}
               className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-brand-dark tracking-tight"
             >
               {settings.heroLandingHeading || 'Craftsmanship You Can Feel In Every Fold!'}
             </motion.h1>
             <motion.p 
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldAnimateHero ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.15 }}
+              transition={shouldAnimateHero ? { duration: 0.8, delay: 0.15 } : { duration: 0 }}
               className="font-sans text-sm sm:text-base text-brand-muted max-w-lg leading-relaxed"
             >
               {settings.heroLandingSubheading || 'Thoughtfully manufactured for modern Indian women.'}
             </motion.p>
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldAnimateHero ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
+              transition={shouldAnimateHero ? { duration: 0.8, delay: 0.3 } : { duration: 0 }}
               className="pt-2"
             >
               <Link
@@ -1306,7 +1312,7 @@ function FeaturedProductCard({ product, onQuickView }) {
       price: currentPrice + (defaultSizeObj?.extraPricePaise ? defaultSizeObj.extraPricePaise / 100 : 0),
       quantity: 1,
       color: defaultColor || null,
-      size: product.category?.slug !== 'sarees' ? (defaultSizeObj?.size || null) : null,
+      size: !product.category?.slug?.includes('saree') ? (defaultSizeObj?.size || null) : null,
       sku: defaultSizeObj?.variantSku || product.sku,
       imageUrl: primaryImage,
       stock: defaultSizeObj?.stock !== undefined ? defaultSizeObj.stock : (product.stock || 10)
@@ -1392,7 +1398,7 @@ function FeaturedProductCard({ product, onQuickView }) {
         </h4>
 
         <div className="text-[11px] text-brand-muted leading-tight font-medium">
-          {product.category?.slug === 'sarees' ? (
+          {product.category?.slug?.includes('saree') ? (
             <span>Fabric: {product.fabric || 'Pure Silk'} • Blouse Included</span>
           ) : product.category?.slug === 'kurtis' ? (
             <span>Material: {product.fabric || 'Cotton'} • Fit: A-Line Classic</span>

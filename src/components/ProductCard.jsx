@@ -53,8 +53,9 @@ export default function ProductCard({ product, onQuickView }) {
   const primaryImage = sourceImages?.find(img => img.isPrimary)?.url || sourceImages?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
   const secondaryImage = sourceImages?.find(img => !img.isPrimary && img.displayOrder > 0)?.url || sourceImages?.[1]?.url || primaryImage;
 
-  if (!hasSizes) {
-    totalStock = product.stock || 0;
+  const isSaree = product.category?.slug?.includes('saree') || product.name?.toLowerCase().includes('saree');
+  if (!hasSizes || isSaree) {
+    totalStock = product.stock !== undefined ? product.stock : 999;
   }
 
   const isOutOfStock = totalStock === 0;
@@ -75,7 +76,7 @@ export default function ProductCard({ product, onQuickView }) {
       price: currentPrice + (defaultSizeObj?.extraPricePaise ? defaultSizeObj.extraPricePaise / 100 : 0),
       quantity: 1,
       color: defaultColor || null,
-      size: product.category?.slug !== 'sarees' ? (defaultSizeObj?.size || null) : null,
+      size: !product.category?.slug?.includes('saree') ? (defaultSizeObj?.size || null) : null,
       sku: defaultSizeObj?.variantSku || product.sku,
       imageUrl: primaryImage,
       stock: defaultSizeObj?.stock !== undefined ? defaultSizeObj.stock : totalStock
@@ -250,19 +251,26 @@ export default function ProductCard({ product, onQuickView }) {
         </div>
 
         {/* Price Row */}
-        <div className="flex items-center space-x-3 mt-4 select-none">
-          <span className="font-sans font-bold text-[#5C2E2E] text-xl">
-            ₹{currentPrice.toLocaleString('en-IN')}
-          </span>
-          {originalPrice && (
-            <>
-              <span className="font-sans text-sm text-[#4a4a4a] line-through">
-                ₹{originalPrice.toLocaleString('en-IN')}
-              </span>
-              <span className="border border-[#8B5A2B]/40 text-[#8B5A2B] px-1.5 py-0.5 text-[10px] font-bold tracking-wider rounded-sm">
-                {discountPercent}% OFF
-              </span>
-            </>
+        <div className="flex items-center justify-between mt-4 select-none">
+          <div className="flex items-center space-x-3">
+            <span className="font-sans font-bold text-[#5C2E2E] text-xl">
+              ₹{currentPrice.toLocaleString('en-IN')}
+            </span>
+            {originalPrice && (
+              <>
+                <span className="font-sans text-sm text-[#4a4a4a] line-through">
+                  ₹{originalPrice.toLocaleString('en-IN')}
+                </span>
+                <span className="border border-[#8B5A2B]/40 text-[#8B5A2B] px-1.5 py-0.5 text-[10px] font-bold tracking-wider rounded-sm">
+                  {discountPercent}% OFF
+                </span>
+              </>
+            )}
+          </div>
+          {totalStock > 0 && totalStock < 5 && (
+            <span className="bg-[#FFF0F0] text-brand-crimson border border-brand-crimson/35 px-2 py-0.5 text-[10px] font-bold tracking-wider rounded-md animate-pulse">
+              Limited Stock
+            </span>
           )}
         </div>
       </div>

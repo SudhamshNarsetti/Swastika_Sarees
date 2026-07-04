@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal, Grid, List, RotateCcw, X, Star, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
@@ -8,6 +8,7 @@ import { staggerContainer, fadeInUp, scaleUp } from '../utils/animations';
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   // Data State
   const [products, setProducts] = useState([]);
@@ -625,7 +626,7 @@ export default function Shop() {
           ) : viewMode === 'grid' ? (
             <motion.div 
               initial="initial"
-              animate="whileInView"
+              animate="animate"
               exit="exit"
               variants={staggerContainer}
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-8 sm:gap-y-12"
@@ -646,7 +647,7 @@ export default function Shop() {
             // List View Layout
             <motion.div 
               initial="initial"
-              animate="whileInView"
+              animate="animate"
               variants={staggerContainer}
               className="space-y-4"
             >
@@ -655,7 +656,13 @@ export default function Shop() {
                 const originalPrice = prod.originalPrice ? prod.originalPrice / 100 : null;
                 const primaryImage = prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
                 return (
-                  <motion.div variants={fadeInUp} key={prod._id} layout className="flex bg-brand-white border border-brand-border/40 p-4 rounded-xl hover:shadow-md transition-shadow gap-4 text-left">
+                  <motion.div
+                    variants={fadeInUp}
+                    key={prod._id}
+                    layout
+                    onClick={() => navigate(`/product/${prod.slug}`)}
+                    className="flex bg-brand-white border border-brand-border/40 p-4 rounded-xl hover:shadow-md transition-shadow gap-4 text-left cursor-pointer"
+                  >
                     <img src={primaryImage} alt={prod.name} className="w-24 h-32 object-cover object-top rounded-md border" />
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
@@ -669,7 +676,7 @@ export default function Shop() {
                           {originalPrice && <span className="text-2xs text-brand-muted line-through">₹{originalPrice}</span>}
                         </div>
                         <button
-                          onClick={() => setQuickViewProduct(prod)}
+                          onClick={(e) => { e.stopPropagation(); setQuickViewProduct(prod); }}
                           className="bg-brand-crimson hover:bg-brand-muted text-brand-cream px-4 py-1.5 rounded text-xs font-semibold border border-brand-gold/35 shadow-sm transition-colors"
                         >
                           Select Options

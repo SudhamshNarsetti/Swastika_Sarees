@@ -12,7 +12,7 @@ if (supabaseUrl && supabaseAnonKey) {
     console.error('Failed to initialize Supabase client:', error);
   }
 } else {
-  console.warn(
+  console.log(
     'Supabase environment variables (VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY) are missing. Running in local simulation mode.'
   );
 }

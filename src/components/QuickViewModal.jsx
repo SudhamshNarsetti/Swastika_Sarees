@@ -22,7 +22,7 @@ export default function QuickViewModal({ product, onClose }) {
     if (product) {
       const defaultVariant = product.variants?.[0];
       setSelectedColor(defaultVariant?.colorName || null);
-      const showSizeInit = product.showSizeChart !== false && product.category?.slug !== 'sarees';
+      const showSizeInit = product.showSizeChart !== false && !product.category?.slug?.includes('saree');
       setSelectedSize(showSizeInit ? (defaultVariant?.size || null) : null);
       setActiveImageIndex(0);
       setQuantity(1);
@@ -40,9 +40,13 @@ export default function QuickViewModal({ product, onClose }) {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    if (product) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
     return () => { document.body.style.overflow = ""; };
-  }, []);
+  }, [product]);
 
   if (!product) return null;
 
@@ -61,8 +65,9 @@ export default function QuickViewModal({ product, onClose }) {
       computedStock += v.sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
     }
   });
-  if (!hasSizes) {
-    computedStock = product.stock || 0;
+  const isSaree = product.category?.slug?.includes('saree') || product.name?.toLowerCase().includes('saree');
+  if (!hasSizes || isSaree) {
+    computedStock = product.stock !== undefined ? product.stock : 999;
   }
 
   const images = product.images?.length > 0
@@ -74,25 +79,87 @@ export default function QuickViewModal({ product, onClose }) {
   const discountPercent = originalPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0;
 
   const colorsMap = new Map();
-  const sizesMap = new Map();
-  product.variants?.forEach(v => {
-    if (v.colorName && !colorsMap.has(v.colorName)) colorsMap.set(v.colorName, v.colorHex);
-    if (v.size && !sizesMap.has(v.size)) sizesMap.set(v.size, true);
-  });
-  const uniqueColors = Array.from(colorsMap.entries()).map(([name, hex]) => ({ name, hex }));
-  const uniqueSizes = Array.from(sizesMap.keys());
-  const showSize = product.showSizeChart !== false && product.category?.slug !== 'sarees';
+  const defaultImageUrl = product.mainProduct?.images?.find(i => i.isPrimary)?.url || product.mainProduct?.images?.[0]?.url || product.images?.find(i => i.isPrimary)?.url || product.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
+
+  if (product.mainProduct?.primaryColor?.name || product.colorName) {
+    colorsMap.set(
+       product.mainProduct?.primaryColor?.name || product.colorName, 
+       {
+         hex: product.mainProduct?.primaryColor?.hex || product.colorHex || '#000000',
+         imageUrl: defaultImageUrl,
+         availability: product.availability || 'Single Ready',
+         sizes: product.mainProduct?.sizes || [],
+         images: product.mainProduct?.images || product.images || [],
+         video: product.mainProduct?.video || product.productVideo
+       }
+    );
+  }
+
+  if (product.variants && product.variants.length > 0) {
+    product.variants.forEach(v => {
+      if (v.colorName) {
+        if (!colorsMap.has(v.colorName)) {
+          const variantImageUrl = v.images?.find(i => i.isPrimary)?.url || v.images?.[0]?.url || defaultImageUrl;
+          colorsMap.set(v.colorName, {
+            hex: v.colorHex,
+            imageUrl: variantImageUrl,
+            availability: v.availability || product.availability || 'Single Ready',
+            sizes: v.sizes || [],
+            images: v.images || [],
+            video: v.video || product.productVideo
+          });
+        } else {
+          const existing = colorsMap.get(v.colorName);
+          existing.sizes = v.sizes || [];
+          if (v.images && v.images.length > 0) existing.images = v.images;
+          if (v.video) existing.video = v.video;
+          colorsMap.set(v.colorName, existing);
+        }
+      }
+    });
+  }
+
+  const uniqueColors = Array.from(colorsMap.entries()).map(([name, data]) => ({ name, ...data }));
+  const activeColorObj = colorsMap.get(selectedColor) || uniqueColors[0] || null;
+  const showSize = product.showSizeChart !== false && !product.category?.slug?.includes('saree');
+  
+  const uniqueSizes = showSize && activeColorObj && activeColorObj.sizes 
+    ? activeColorObj.sizes 
+    : [];
+
+  const activeSizeObj = uniqueSizes.find(s => s.size === selectedSize) || (activeColorObj?.sizes?.find(s => s.size === 'Free Size')) || null;
+
+  // Set default selected color when uniqueColors becomes available
+  useEffect(() => {
+    if (uniqueColors.length > 0 && !selectedColor) {
+      setSelectedColor(uniqueColors[0].name);
+    }
+  }, [uniqueColors, selectedColor]);
+
+  // Set default selected size to first in-stock option when uniqueSizes changes
+  useEffect(() => {
+    if (showSize && uniqueSizes.length > 0 && !selectedSize) {
+      const firstInStock = uniqueSizes.find(s => s.stock > 0);
+      if (firstInStock) {
+        setSelectedSize(firstInStock.size);
+      } else {
+        setSelectedSize(uniqueSizes[0].size);
+      }
+    }
+  }, [uniqueSizes, showSize, selectedSize]);
 
   const handleAddToCart = () => {
+    const defaultColor = product.mainProduct?.primaryColor?.name || product.colorName || product.variants?.[0]?.colorName;
     addItem({
       product: product._id,
       slug: product.slug,
       name: product.name,
-      price: currentPrice,
+      price: currentPrice + (activeSizeObj?.extraPricePaise ? activeSizeObj.extraPricePaise / 100 : 0),
       quantity,
-      color: selectedColor,
-      size: selectedSize,
-      imageUrl: images[0]?.url,
+      color: selectedColor || defaultColor || null,
+      size: !product.category?.slug?.includes('saree') ? (selectedSize || null) : null,
+      sku: activeSizeObj?.variantSku || product.sku,
+      imageUrl: activeColorObj?.imageUrl || images[0]?.url,
       stock: computedStock
     });
     onClose();
@@ -208,8 +275,14 @@ export default function QuickViewModal({ product, onClose }) {
               <span className="text-sm line-through text-gray-400 font-sans">&#8377;{originalPrice.toLocaleString("en-IN")}</span>
               <span className="text-white text-xs font-bold px-2 py-0.5 rounded-sm" style={{ background: "#C8832A" }}>{discountPercent}% OFF</span>
             </>}
-            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded border" style={computedStock > 0 ? { background: "#f0fdf4", color: "#15803d", borderColor: "#86efac" } : { background: "#fff1f2", color: "#8B1A1A", borderColor: "rgba(139,26,26,0.3)" }}>
-              {computedStock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded border animate-pulse" style={
+              computedStock === 0
+                ? { background: "#fff1f2", color: "#8B1A1A", borderColor: "rgba(139,26,26,0.3)" }
+                : computedStock < 5
+                  ? { background: "#FFF0F0", color: "#8B1A1A", borderColor: "rgba(139,26,26,0.35)" }
+                  : { background: "#f0fdf4", color: "#15803d", borderColor: "#86efac" }
+            }>
+              {computedStock === 0 ? "OUT OF STOCK" : computedStock < 5 ? "LIMITED STOCK" : "IN STOCK"}
             </span>
           </div>
 
@@ -242,19 +315,41 @@ export default function QuickViewModal({ product, onClose }) {
                 </div>
               </div>
             )}
-            {showSize && uniqueSizes.length > 0 && (
+             {showSize && uniqueSizes.length > 0 && (
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-800">
-                  Size: <span style={{ color: "#8B1A1A", textTransform: "none" }}>{selectedSize}</span>
+                  Size: <span style={{ color: "#8B1A1A", textTransform: "none" }}>{selectedSize || 'Choose a size'}</span>
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {uniqueSizes.map(s => (
-                    <button key={s} onClick={() => setSelectedSize(s)}
-                      className="px-4 py-1.5 rounded-lg border text-xs font-medium transition-all"
-                      style={{ background: selectedSize === s ? "#8B1A1A" : "white", color: selectedSize === s ? "white" : "#1a0505", borderColor: selectedSize === s ? "#8B1A1A" : "#e5e7eb" }}>
-                      {s}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-2.5">
+                  {uniqueSizes.map((sObj) => {
+                    const size = sObj.size;
+                    const stock = sObj.stock || 0;
+                    const isSelected = selectedSize === size;
+                    const isOutOfStockSize = stock === 0;
+
+                    return (
+                      <button
+                        key={size}
+                        disabled={isOutOfStockSize}
+                        onClick={() => {
+                          if (!isOutOfStockSize) setSelectedSize(size);
+                        }}
+                        className={`relative px-4 py-2 rounded-full border text-xs font-bold transition-all ${
+                          isSelected
+                            ? 'bg-[#8B1A1A] text-white border-[#8B1A1A] shadow-md'
+                            : isOutOfStockSize
+                              ? 'bg-gray-100/50 text-gray-400/60 border-gray-200 cursor-not-allowed select-none'
+                              : 'bg-white border-gray-200 text-[#1a0505] hover:border-[#8B1A1A] hover:text-[#8B1A1A]'
+                        }`}
+                        style={isOutOfStockSize ? {
+                          backgroundImage: 'linear-gradient(135deg, transparent 47%, rgba(156, 163, 175, 0.4) 47%, rgba(156, 163, 175, 0.4) 53%, transparent 53%)'
+                        } : {}}
+                        title={isOutOfStockSize ? 'Not Available' : ''}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

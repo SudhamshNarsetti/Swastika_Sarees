@@ -4,6 +4,7 @@ import { Heart, ShoppingBag, Send, ShieldAlert, Star, MessageSquare, Truck, Chec
 import { useCartStore } from '../store/cartStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import ProductCard from '../components/ProductCard';
+import QuickViewModal from '../components/QuickViewModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, fadeInUp, scaleUp } from '../utils/animations';
 
@@ -33,6 +34,7 @@ export default function ProductDetail() {
 
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
   const reviewsTabRef = useRef(null);
 
   // Fetch product detail & settings
@@ -52,7 +54,7 @@ export default function ProductDetail() {
         // Select default variant choices
         const defaultVariant = data.variants?.[0];
         setSelectedColor(defaultVariant?.colorName || data.mainProduct?.primaryColor?.name || data.colorName || null);
-        const showSizeInit = data.showSizeChart !== false && data.category?.slug !== 'sarees';
+        const showSizeInit = data.showSizeChart !== false && !data.category?.slug?.includes('saree');
         setSelectedSize(showSizeInit ? (defaultVariant?.size || null) : null);
         setActiveImageIndex(0);
         setQuantity(1);
@@ -105,6 +107,18 @@ export default function ProductDetail() {
     setSelectedSize(null);
   }, [selectedColor]);
 
+  // Set default selected size to first in-stock option when uniqueSizes changes
+  useEffect(() => {
+    if (showSize && uniqueSizes.length > 0 && !selectedSize) {
+      const firstInStock = uniqueSizes.find(s => s.stock > 0);
+      if (firstInStock) {
+        setSelectedSize(firstInStock.size);
+      } else {
+        setSelectedSize(uniqueSizes[0].size);
+      }
+    }
+  }, [uniqueSizes, showSize, selectedSize]);
+
   // Preload primary images of all variants for smooth switching
   useEffect(() => {
     if (product?.variants) {
@@ -119,18 +133,11 @@ export default function ProductDetail() {
   }, [product]);
 
   const trackRecentlyViewed = (prod) => {
+    if (!prod || !prod._id) return;
     const cached = JSON.parse(localStorage.getItem('swastika_recently_viewed')) || [];
-    const filtered = cached.filter(p => p._id !== prod._id);
+    const filtered = cached.filter(p => p && p._id !== prod._id);
     const newHistory = [
-      {
-        _id: prod._id,
-        name: prod.name,
-        slug: prod.slug,
-        price: prod.price,
-        originalPrice: prod.originalPrice,
-        images: prod.images,
-        category: prod.category
-      },
+      prod,
       ...filtered
     ].slice(0, 9); // Max 8 + current
     localStorage.setItem('swastika_recently_viewed', JSON.stringify(newHistory));
@@ -145,7 +152,22 @@ export default function ProductDetail() {
     );
   }
 
-  if (!product) return null;
+  if (!product) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center select-none">
+        <h2 className="font-display font-bold text-brand-dark text-2xl mb-4">Product Details Empty</h2>
+        <p className="text-brand-muted mb-8 max-w-md mx-auto">
+          We couldn't retrieve the details for this product. It might be out of stock, deactivated by the admin, or temporarily unavailable.
+        </p>
+        <button
+          onClick={() => navigate('/shop')}
+          className="bg-brand-crimson hover:bg-brand-muted text-brand-cream px-6 py-2.5 rounded-full font-semibold border border-brand-gold/35 shadow-md transition-colors"
+        >
+          Back to Shop
+        </button>
+      </div>
+    );
+  }
 
   const isSaved = isInWishlist(product._id);
 
@@ -196,7 +218,7 @@ export default function ProductDetail() {
   
   // Now find the currently active color object
   const activeColorObj = colorsMap.get(selectedColor) || uniqueColors[0] || null;
-  const showSize = product.showSizeChart !== false && product.category?.slug !== 'sarees';
+  const showSize = product.showSizeChart !== false && !product.category?.slug?.includes('saree');
   
   // Sizes are derived from the selected color's available sizes
   const uniqueSizes = showSize && activeColorObj && activeColorObj.sizes 
@@ -213,17 +235,14 @@ export default function ProductDetail() {
   const displaySku = activeSizeObj?.variantSku || product.sku;
   
   // Total stock calculation
-  let displayStock = 0;
-  if (showSize && uniqueSizes.length > 0) {
+  const isSaree = product.category?.slug?.includes('saree') || product.name?.toLowerCase().includes('saree');
+  if (showSize && uniqueSizes.length > 0 && !isSaree) {
     if (selectedSize && activeSizeObj) {
       displayStock = activeSizeObj.stock || 0;
     } else {
       // Sum of all sizes
       displayStock = uniqueSizes.reduce((sum, s) => sum + (s.stock || 0), 0) || 0;
     }
-  } else if (activeColorObj?.sizes?.length > 0) {
-    // e.g. Sarees with "Free Size" array
-    displayStock = activeColorObj.sizes.reduce((sum, s) => sum + (s.stock || 0), 0) || 0;
   } else {
     displayStock = product.stock || 0;
   }
@@ -348,7 +367,7 @@ export default function ProductDetail() {
       {/* Main Details Panel */}
       <motion.div 
         initial="initial"
-        animate="whileInView"
+        animate="animate"
         variants={staggerContainer}
         className="flex flex-col lg:flex-row gap-10 border-b border-brand-border/40 pb-16"
       >
@@ -442,19 +461,26 @@ export default function ProductDetail() {
           </div>
 
           {/* Pricing Block */}
-          <div className="bg-brand-cream/60 border border-brand-border/40 p-4 rounded-xl flex items-center space-x-4 mb-6 select-none max-w-md shadow-2xs">
-            <span className="font-sans font-bold text-brand-crimson text-2xl sm:text-3xl">
-              ₹{currentPrice.toLocaleString('en-IN')}
-            </span>
-            {originalPrice && (
-              <>
-                <span className="font-sans text-base text-brand-muted line-through">
-                  ₹{originalPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="bg-brand-gold text-brand-cream px-2 py-0.5 rounded-sm font-sans text-xs font-bold shadow-xs">
-                  {discountPercent}% OFF
-                </span>
-              </>
+          <div className="bg-brand-cream/60 border border-brand-border/40 p-4 rounded-xl flex items-center justify-between mb-6 select-none max-w-md shadow-2xs">
+            <div className="flex items-center space-x-4">
+              <span className="font-sans font-bold text-brand-crimson text-2xl sm:text-3xl">
+                ₹{currentPrice.toLocaleString('en-IN')}
+              </span>
+              {originalPrice && (
+                <>
+                  <span className="font-sans text-base text-brand-muted line-through">
+                    ₹{originalPrice.toLocaleString('en-IN')}
+                  </span>
+                  <span className="bg-brand-gold text-brand-cream px-2 py-0.5 rounded-sm font-sans text-xs font-bold shadow-xs">
+                    {discountPercent}% OFF
+                  </span>
+                </>
+              )}
+            </div>
+            {displayStock > 0 && displayStock < 5 && (
+              <span className="bg-[#FFF0F0] text-brand-crimson border border-brand-crimson/35 px-2.5 py-1 text-[10px] sm:text-xs font-bold tracking-wider rounded-md animate-pulse">
+                Limited Stock
+              </span>
             )}
           </div>
 
@@ -548,10 +574,13 @@ export default function ProductDetail() {
                           isSelected
                             ? 'bg-brand-crimson text-brand-cream border-brand-crimson shadow-md scale-[1.02]'
                             : isOutOfStockSize
-                              ? 'bg-brand-muted/10 text-brand-muted/40 border-brand-muted/20 cursor-not-allowed line-through'
+                              ? 'bg-brand-muted/5 text-brand-muted/30 border-brand-muted/15 cursor-not-allowed select-none'
                               : 'bg-brand-white border-brand-border text-brand-dark hover:border-brand-crimson hover:text-brand-crimson hover:shadow-xs'
                         }`}
-                        title={isOutOfStockSize ? 'Out of Stock' : ''}
+                        style={isOutOfStockSize ? {
+                          backgroundImage: 'linear-gradient(135deg, transparent 47%, rgba(107, 58, 58, 0.4) 47%, rgba(107, 58, 58, 0.4) 53%, transparent 53%)'
+                        } : {}}
+                        title={isOutOfStockSize ? 'Not Available' : ''}
                       >
                         {size}
                         {isSelected && (
@@ -622,15 +651,25 @@ export default function ProductDetail() {
           </div>
 
           {/* WhatsApp Direct Order Button */}
-          <a
-            href={getWhatsAppMessageUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3.5 rounded-lg flex items-center justify-center space-x-2 font-semibold transition-colors shadow-md mb-6 select-none"
-          >
-            <MessageSquare size={18} />
-            <span>Order via WhatsApp 📲</span>
-          </a>
+          {displayStock === 0 ? (
+            <button
+              disabled
+              className="w-full bg-[#25D366]/20 text-[#25D366]/60 py-3.5 rounded-lg flex items-center justify-center space-x-2 font-semibold select-none cursor-not-allowed mb-6"
+            >
+              <MessageSquare size={18} />
+              <span>Order via WhatsApp 📲</span>
+            </button>
+          ) : (
+            <a
+              href={getWhatsAppMessageUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3.5 rounded-lg flex items-center justify-center space-x-2 font-semibold transition-colors shadow-md mb-6 select-none"
+            >
+              <MessageSquare size={18} />
+              <span>Order via WhatsApp 📲</span>
+            </a>
+          )}
 
           {/* Delivery Pincode Checker */}
           <div className="bg-brand-cream border border-brand-border/60 p-4 rounded-xl mb-6 select-none">
@@ -1008,7 +1047,7 @@ export default function ProductDetail() {
               <motion.div variants={fadeInUp} key={prod._id}>
                 <ProductCard
                   product={prod}
-                  onQuickView={() => {}}
+                  onQuickView={(p) => setQuickViewProduct(p)}
                 />
               </motion.div>
             ))}
@@ -1033,13 +1072,19 @@ export default function ProductDetail() {
               <motion.div variants={fadeInUp} key={prod._id}>
                 <ProductCard
                   product={prod}
-                  onQuickView={() => {}}
+                  onQuickView={(p) => setQuickViewProduct(p)}
                 />
               </motion.div>
             ))}
           </div>
         </motion.section>
       )}
+
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
 
     </div>
   );
