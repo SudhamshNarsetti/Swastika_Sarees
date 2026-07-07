@@ -853,7 +853,7 @@ export default function ProductDetail() {
                   <h5 className="font-display font-semibold text-brand-dark mb-4 text-sm">Product Video</h5>
                   <div className="w-full max-w-[320px] aspect-[9/16] bg-brand-dark rounded-xl overflow-hidden shadow-lg relative">
                     <iframe
-                      src={product.productVideo.replace("watch?v=", "embed/").replace("shorts/", "embed/")}
+                      src={product.productVideo.replace("watch?v=", "embed/").replace("shorts/", "embed/") + (product.productVideo.includes('?') ? '&' : '?') + "autoplay=1&mute=1&playsinline=1&enablejsapi=1"}
                       className="absolute inset-0 w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Package, MapPin, CreditCard, Clock, Truck, Printer, ChevronRight } from 'lucide-react';
+import { Package, MapPin, CreditCard, Clock, Truck, Printer, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export default function OrderDetail() {
@@ -67,7 +67,7 @@ export default function OrderDetail() {
   if (errorMsg) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center select-none flex flex-col items-center font-sans">
-        <ShieldAlert className="text-brand-crimson mb-4" size={40} />
+        <ShieldCheck className="text-brand-crimson mb-4" size={40} />
         <h3 className="font-display font-semibold text-brand-dark text-lg mb-2">Access Denied</h3>
         <p className="text-xs text-brand-muted mb-6">{errorMsg}</p>
         <Link to="/orders" className="bg-brand-crimson text-brand-cream text-2xs px-5 py-2.5 rounded-lg border font-semibold">View History</Link>
@@ -83,13 +83,8 @@ export default function OrderDetail() {
     { title: 'Confirmed', icon: Package, desc: 'Verified by boutique' },
     { title: 'Processing', icon: Package, desc: 'Quality inspections' },
     { title: 'Shipped', icon: Truck, desc: 'In courier transit' },
-    { title: 'Delivered', icon: Check, desc: 'Received successfully' }
+    { title: 'Delivered', icon: CheckCircle2, desc: 'Received successfully' }
   ];
-
-  // Helper inside loop: Timeline item icon resolver
-  function Check(props) {
-    return <span className="text-3xs">✓</span>;
-  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 text-left select-none">
@@ -260,15 +255,5 @@ export default function OrderDetail() {
       </div>
 
     </div>
-  );
-}
-
-function ShieldAlert(props) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={props.size} height={props.size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <line x1={12} y1={8} x2={12} y2={12} />
-      <line x1={12} y1={16} x2={12.01} y2={16} />
-    </svg>
   );
 }

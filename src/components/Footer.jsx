@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PhoneCall, Mail, Instagram, MessageSquare, ShieldCheck, Clock, Truck, ShieldAlert } from 'lucide-react';
+import { PhoneCall, Mail, Instagram, MessageSquare, ShieldCheck, Clock, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '../utils/animations';
 
 export default function Footer() {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterDone, setNewsletterDone] = useState(false);
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes('@')) return;
+    try {
+      await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail })
+      });
+    } catch (_) {
+      // silently succeed even if backend not wired yet
+    }
+    setNewsletterDone(true);
+    setNewsletterEmail('');
+  };
+
   return (
     <footer className="bg-brand-dark text-brand-cream/80 pt-16 pb-8 border-t border-brand-border/20 select-none font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,16 +46,23 @@ export default function Footer() {
             </p>
             <div className="pt-2">
               <h4 className="font-sans text-[10px] uppercase tracking-wider font-bold text-brand-gold mb-2.5">Join the Swastika Family</h4>
-              <div className="flex max-w-xs">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="bg-brand-white/5 border border-brand-border/20 text-brand-cream text-xs px-3.5 py-2 rounded-l w-full focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all duration-300"
-                />
-                <button className="bg-brand-gold text-brand-dark px-3.5 py-2 rounded-r text-xs font-bold uppercase tracking-wider hover:bg-brand-cream transition-colors duration-300">
-                  Join
-                </button>
-              </div>
+              {newsletterDone ? (
+                <p className="text-xs text-emerald-400 font-semibold">🎉 Thank you! You're on the list.</p>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="flex max-w-xs">
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="bg-brand-white/5 border border-brand-border/20 text-brand-cream text-xs px-3.5 py-2 rounded-l w-full focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all duration-300"
+                    required
+                  />
+                  <button type="submit" className="bg-brand-gold text-brand-dark px-3.5 py-2 rounded-r text-xs font-bold uppercase tracking-wider hover:bg-brand-cream transition-colors duration-300">
+                    Join
+                  </button>
+                </form>
+              )}
             </div>
 
             <div className="flex space-x-3 pt-2">

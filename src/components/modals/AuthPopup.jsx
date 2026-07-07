@@ -6,7 +6,7 @@ import { X, Eye, EyeOff, Mail, Lock, User, Phone, Check, Heart, Package, Zap, Gi
 import { Link } from 'react-router-dom';
 
 const IconComponent = ({ name, size = 16, className = '' }) => {
-  const icons = { Heart, Package, Zap, Gift, Shield, Star: CheckCircle2, Truck: Zap, CheckCircle2 };
+  const icons = { Heart, Package, Zap, Gift, Shield, Star, Truck, CheckCircle2 };
   const Icon = icons[name] || Heart;
   return <Icon size={size} className={className} />;
 };
@@ -192,7 +192,7 @@ export default function AuthPopup() {
             <img 
               src={mobileImg}
               alt="Premium Sarees"
-              className="absolute inset-0 w-full h-full object-cover rounded-t-[24px] md:rounded-l-[24px] md:rounded-tr-none md:hidden block"
+              className="absolute inset-0 w-full h-full object-contain bg-brand-dark rounded-t-[24px] md:rounded-l-[24px] md:rounded-tr-none md:hidden block"
             />
             <div className={`absolute inset-0 z-20 p-5 md:p-8 flex flex-col justify-end ${settings.overlay?.type === 'light' ? 'text-brand-dark' : 'text-white'}`}>
               {settings.promotional?.badgeText && (

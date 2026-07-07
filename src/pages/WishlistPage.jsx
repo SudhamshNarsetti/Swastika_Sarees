@@ -57,7 +57,7 @@ export default function WishlistPage() {
 
       <motion.div 
         initial="initial"
-        animate="whileInView"
+        animate="animate"
         variants={staggerContainer}
         className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
       >
