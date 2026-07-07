@@ -1032,8 +1032,7 @@ export default function ProductDetail() {
       {relatedProducts.length > 0 && (
         <motion.section 
           initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true }}
+          animate="animate"
           variants={staggerContainer}
           className="mt-20"
         >
@@ -1057,8 +1056,7 @@ export default function ProductDetail() {
       {recentlyViewed.length > 0 && (
         <motion.section 
           initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true }}
+          animate="animate"
           variants={staggerContainer}
           className="mt-20"
         >

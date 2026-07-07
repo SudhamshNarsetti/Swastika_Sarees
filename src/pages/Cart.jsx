@@ -110,7 +110,7 @@ export default function Cart() {
 
           <motion.div 
             initial="initial"
-            animate="whileInView"
+            animate="animate"
             variants={staggerContainer}
             className="divide-y divide-brand-border/40 bg-brand-white border border-brand-border/40 rounded-xl overflow-hidden shadow-xs"
           >

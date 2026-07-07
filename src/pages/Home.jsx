@@ -700,8 +700,7 @@ export default function Home() {
       {/* 2. CATEGORY EDITORIAL GRID */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center select-none font-sans"
       >
@@ -752,8 +751,7 @@ export default function Home() {
       {/* 3. FEATURED PRODUCTS COLLECTION */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="bg-brand-white border-t border-b border-brand-border/40 py-16"
       >
@@ -800,8 +798,7 @@ export default function Home() {
       {settings?.homeStoryActive !== false && (
         <motion.section
           initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true, margin: "-50px" }}
+          animate="animate"
           variants={staggerContainer}
           className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans"
         >
@@ -862,8 +859,7 @@ export default function Home() {
       {/* 5. FABRIC GUIDE */}
       <motion.section
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="bg-brand-cream/40 border-t border-b border-brand-border/40 py-16 font-sans text-center"
       >
@@ -925,8 +921,7 @@ export default function Home() {
       {/* 6. NEW ARRIVALS HORIZONTAL SCROLL CAROUSEL */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 font-sans select-none relative"
       >
@@ -977,8 +972,7 @@ export default function Home() {
       {/* 7. CUSTOMER TESTIMONIALS */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="bg-brand-cream/35 border-t border-b border-brand-border/40 py-16 text-center select-none font-sans"
       >
@@ -1057,8 +1051,7 @@ export default function Home() {
       {/* 8. BOUTIQUE GUARANTEE (7 Compact Elegant Cards) */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="bg-brand-white py-16 text-center select-none font-sans"
       >
@@ -1130,8 +1123,7 @@ export default function Home() {
       {/* 9. INSTAGRAM ORGANIC FEED SECTION */}
       <motion.section 
         initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true, margin: "-50px" }}
+        animate="animate"
         variants={staggerContainer}
         className="bg-brand-cream/30 border-t border-brand-border/40 py-16 text-center select-none font-sans"
       >
