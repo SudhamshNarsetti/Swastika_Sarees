@@ -21,7 +21,7 @@ export default function WishlistPage() {
       quantity: 1,
       color: defaultVariant?.colorName || null,
       size: defaultVariant?.size || null,
-      imageUrl: prod.images?.[0]?.url,
+      imageUrl: prod.mainProduct?.primaryImage || prod.mainProduct?.images?.[0]?.url || prod.images?.[0]?.url || null,
       stock: prod.stock
     });
     toggleWishlist(prod);
@@ -63,7 +63,7 @@ export default function WishlistPage() {
       >
         <AnimatePresence>
         {wishlist.map((prod) => {
-          const primaryImage = prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=300';
+          const primaryImage = prod.mainProduct?.primaryImage || prod.mainProduct?.images?.[0]?.url || prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=300';
           const currentPrice = prod.price / 100;
           return (
             <motion.div

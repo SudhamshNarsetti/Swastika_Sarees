@@ -138,6 +138,14 @@ export default function AuthPopup() {
 
   if (!isOpen || !settings) return null;
 
+  const desktopImg = (settings.images?.desktopUrl && !settings.images.desktopUrl.includes('53c'))
+    ? settings.images.desktopUrl
+    : "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80";
+
+  const mobileImg = (settings.images?.mobileUrl && !settings.images.mobileUrl.includes('53c'))
+    ? settings.images.mobileUrl
+    : desktopImg;
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden touch-none">
@@ -167,26 +175,33 @@ export default function AuthPopup() {
           </button>
 
           {/* Top/Left Hero Banner */}
-          <div className="w-full md:w-5/12 h-[200px] sm:h-[240px] md:h-auto shrink-0 relative bg-brand-dark block">
+          <div className="w-full md:w-5/12 h-[260px] sm:h-[300px] md:h-auto shrink-0 relative bg-brand-dark block">
             <div className={`absolute inset-0 z-10 ${
               settings.overlay?.type === 'gradient' ? 'bg-gradient-to-t from-black via-black/50 to-transparent' :
               settings.overlay?.type === 'dark' ? 'bg-black' :
               settings.overlay?.type === 'light' ? 'bg-white' : ''
             }`} style={{ opacity: (settings.overlay?.opacity || 80) / 100 }} />
             
+            {/* Desktop Image */}
             <img 
-              src={settings.images?.desktopUrl || "https://images.unsplash.com/photo-1610030469983-98e550d6153c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+              src={desktopImg}
               alt="Premium Sarees"
-              className="absolute inset-0 w-full h-full object-cover rounded-t-[24px] md:rounded-l-[24px] md:rounded-tr-none"
+              className="absolute inset-0 w-full h-full object-cover rounded-t-[24px] md:rounded-l-[24px] md:rounded-tr-none hidden md:block"
+            />
+            {/* Mobile Image */}
+            <img 
+              src={mobileImg}
+              alt="Premium Sarees"
+              className="absolute inset-0 w-full h-full object-cover rounded-t-[24px] md:rounded-l-[24px] md:rounded-tr-none md:hidden block"
             />
             <div className={`absolute inset-0 z-20 p-5 md:p-8 flex flex-col justify-end ${settings.overlay?.type === 'light' ? 'text-brand-dark' : 'text-white'}`}>
               {settings.promotional?.badgeText && (
                 <span className="inline-block px-3 py-1 bg-brand-gold text-brand-dark text-[10px] font-black uppercase tracking-widest rounded-full w-max mb-3 md:mb-4">{settings.promotional.badgeText}</span>
               )}
               <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold mb-1.5 md:mb-2 leading-tight">{settings.promotional?.heading}</h2>
-              <p className={`text-[13px] md:text-sm mb-4 md:mb-6 max-w-xs leading-snug ${settings.overlay?.type === 'light' ? 'text-gray-700' : 'text-brand-cream/90'}`}>{settings.promotional?.description}</p>
+              <p className={`text-[13px] md:text-sm mb-4 md:mb-6 max-w-xs leading-snug hidden md:block ${settings.overlay?.type === 'light' ? 'text-gray-700' : 'text-brand-cream/90'}`}>{settings.promotional?.description}</p>
               
-              <div className="flex flex-wrap md:grid md:grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-4">
+              <div className="hidden md:grid md:grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-4">
                 {settings.benefits?.filter(b => b.isEnabled).map((b, i) => (
                   <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 md:px-0 md:py-0 bg-white/20 md:bg-transparent backdrop-blur-md md:backdrop-blur-none border border-white/20 md:border-transparent rounded-full md:rounded-none text-[11px] md:text-xs font-semibold">
                     <IconComponent name={b.icon} size={14} className={settings.overlay?.type === 'light' ? 'text-brand-dark' : 'text-brand-gold'}/> 

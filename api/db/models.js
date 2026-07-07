@@ -332,8 +332,8 @@ const LeadSchema = new Schema({
 // 14. Popup Setting Schema
 const PopupSettingSchema = new Schema({
   images: {
-    desktopUrl: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6153c?auto=format&fit=crop&w=800&q=80' },
-    mobileUrl: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6153c?auto=format&fit=crop&w=800&q=80' }
+    desktopUrl: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80' },
+    mobileUrl: { type: String, default: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80' }
   },
   promotional: {
     badgeText: { type: String, default: '✨ NEW ARRIVALS' },

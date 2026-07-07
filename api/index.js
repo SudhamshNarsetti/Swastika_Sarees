@@ -347,7 +347,7 @@ app.get('/api/admin/customers', requireAuth, async (req, res) => {
   }
   try {
     const { search } = req.query;
-    const query = { role: 'customer' };
+    const query = {};
     
     if (search) {
       query.$or = [

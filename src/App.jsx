@@ -172,6 +172,7 @@ function AppContent({ scaleX }) {
         <Routes>
           <Route path="/admin" element={<Admin />} />
         </Routes>
+        <GlobalModal />
       </div>
     );
   }

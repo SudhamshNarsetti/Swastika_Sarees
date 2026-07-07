@@ -127,7 +127,7 @@ export default function AiAssistant() {
                       >
                         <div className="flex items-center space-x-2">
                           <img
-                            src={prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=200'}
+                            src={prod.mainProduct?.primaryImage || prod.mainProduct?.images?.[0]?.url || prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=200'}
                             alt={prod.name}
                             className="w-10 h-10 object-cover rounded-md border border-brand-border/60"
                           />

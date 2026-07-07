@@ -654,7 +654,7 @@ export default function Shop() {
               {products.map(prod => {
                 const currentPrice = prod.price / 100;
                 const originalPrice = prod.originalPrice ? prod.originalPrice / 100 : null;
-                const primaryImage = prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
+                const primaryImage = prod.mainProduct?.primaryImage || prod.mainProduct?.images?.[0]?.url || prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=400';
                 return (
                   <motion.div
                     variants={fadeInUp}
@@ -735,7 +735,7 @@ export default function Shop() {
               <div>
                 <span className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Category</span>
                 <div className="space-y-1 font-sans text-xs text-brand-muted">
-                  {categories.map(cat => (
+                  {availableFilters.categories.map(cat => (
                     <label key={cat._id} className="flex items-center space-x-2.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -750,10 +750,11 @@ export default function Shop() {
               </div>
 
               {/* Fabric */}
+              {availableFilters.fabrics.length > 0 && (
               <div>
                 <span className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Fabric</span>
                 <div className="space-y-1 font-sans text-xs text-brand-muted">
-                  {FABRICS.map(fab => (
+                  {availableFilters.fabrics.map(fab => (
                     <label key={fab} className="flex items-center space-x-2.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -766,6 +767,7 @@ export default function Shop() {
                   ))}
                 </div>
               </div>
+              )}
 
               {/* Price Range */}
               <div>
@@ -792,25 +794,29 @@ export default function Shop() {
               </div>
 
               {/* Color */}
+              {availableFilters.colors.length > 0 && (
               <div>
                 <span className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Color</span>
                 <div className="flex flex-wrap gap-2">
-                  {COLORS.map((col) => (
+                  {availableFilters.colors.map((col) => (
                     <button
-                      key={col.name}
-                      onClick={() => handleColorChange(col.name)}
-                      className={`w-6 h-6 rounded-full border shadow-2xs ${selectedColors.includes(col.name) ? 'ring-2 ring-brand-crimson border-brand-white scale-105' : 'border-brand-border'}`}
-                      style={{ backgroundColor: col.hex }}
-                    />
+                      key={col}
+                      onClick={() => handleColorChange(col)}
+                      className={`px-2 py-1 text-2xs font-semibold rounded border ${selectedColors.includes(col) ? 'bg-brand-crimson text-brand-cream border-brand-crimson' : 'bg-brand-white border-brand-border text-brand-dark'}`}
+                    >
+                      {col}
+                    </button>
                   ))}
                 </div>
               </div>
+              )}
 
               {/* Size */}
+              {availableFilters.sizes.length > 0 && (
               <div>
                 <span className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Size</span>
                 <div className="flex flex-wrap gap-1 font-sans">
-                  {SIZES.map((sz) => (
+                  {availableFilters.sizes.map((sz) => (
                     <button
                       key={sz}
                       onClick={() => handleSizeChange(sz)}
@@ -821,6 +827,7 @@ export default function Shop() {
                   ))}
                 </div>
               </div>
+              )}
 
               <div className="border-t border-brand-border/60 pt-4">
                 <label className="flex items-center space-x-2.5 cursor-pointer font-sans text-xs text-brand-dark font-medium">

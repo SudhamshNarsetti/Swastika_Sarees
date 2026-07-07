@@ -54,6 +54,15 @@ export default function Home() {
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const heroVideoRef = useRef(null);
+
+  // Detect mobile viewport for conditional inline styles
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -102,6 +111,16 @@ export default function Home() {
 
     fetchData();
   }, []);
+
+  // Programmatic mobile autoplay override for hero landing video
+  useEffect(() => {
+    if (heroVideoRef.current) {
+      heroVideoRef.current.muted = true;
+      heroVideoRef.current.play().catch(err => {
+        console.log('Autoplay prevented or failed:', err);
+      });
+    }
+  }, [settings?.heroLandingVideoUrl, settings?.heroLandingMediaType]);
 
   // Auto-scroll banner slides — runs after activeBanners is defined (see below)
 
@@ -279,6 +298,7 @@ export default function Home() {
           <div className="w-full md:w-1/2 relative aspect-video md:aspect-auto h-[40vh] md:h-full overflow-hidden bg-brand-dark">
             {settings.heroLandingMediaType === 'video' && settings.heroLandingVideoUrl ? (
               <video
+                ref={heroVideoRef}
                 src={`${settings.heroLandingVideoUrl}${settings.heroLandingVideoUrl.includes('?') ? '&' : '?'}cb=${VIDEO_CACHE_BUSTER}`}
                 autoPlay
                 loop
@@ -309,10 +329,9 @@ export default function Home() {
       )}
 
       {/* 1. HERO BANNER CAROUSEL (Premium Editorial Vogue-Style) */}
-      {/* 1. HERO BANNER CAROUSEL (Premium Editorial Vogue-Style) */}
       <section 
         className="relative w-full overflow-hidden bg-[#FDFBF7] md:min-h-[85vh] lg:min-h-[90vh]"
-        style={{ minHeight: 'calc(100vh - 80px)' }}
+        style={!isMobile ? { minHeight: 'calc(100vh - 80px)' } : undefined}
         onMouseEnter={() => setIsHoveringCarousel(true)}
         onMouseLeave={() => setIsHoveringCarousel(false)}
       >
@@ -820,7 +839,7 @@ export default function Home() {
               </p>
               {(settings?.homeStoryQuote || settings?.homeStoryAuthor) && (
                 <blockquote className="border-l-2 border-brand-gold pl-4 text-xs italic text-brand-dark/80 font-serif leading-relaxed">
-                  "{settings.homeStoryQuote || 'We believe in preserving the rich heritage of Indian textiles while designing comfortable, drape-friendly wear for life\'s special occasions.'}"
+                  &quot;{settings.homeStoryQuote || "We believe in preserving the rich heritage of Indian textiles while designing comfortable, drape-friendly wear for life's special occasions."}&quot;
                   {settings.homeStoryAuthor && (
                     <span className="block mt-1.5 text-2xs uppercase tracking-wider text-brand-gold font-sans font-bold">— {settings.homeStoryAuthor}</span>
                   )}

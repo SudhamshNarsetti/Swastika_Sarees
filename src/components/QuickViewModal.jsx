@@ -70,10 +70,6 @@ export default function QuickViewModal({ product, onClose }) {
     computedStock = product.stock !== undefined ? product.stock : 999;
   }
 
-  const images = product.images?.length > 0
-    ? product.images
-    : [{ url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800" }];
-
   const currentPrice = product.price / 100;
   const originalPrice = product.originalPrice ? product.originalPrice / 100 : null;
   const discountPercent = originalPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0;
@@ -92,7 +88,7 @@ export default function QuickViewModal({ product, onClose }) {
          images: product.mainProduct?.images || product.images || [],
          video: product.mainProduct?.video || product.productVideo
        }
-    );
+     );
   }
 
   if (product.variants && product.variants.length > 0) {
@@ -128,6 +124,16 @@ export default function QuickViewModal({ product, onClose }) {
     : [];
 
   const activeSizeObj = uniqueSizes.find(s => s.size === selectedSize) || (activeColorObj?.sizes?.find(s => s.size === 'Free Size')) || null;
+
+  const defaultImages = product.mainProduct?.images?.length > 0 ? product.mainProduct.images : product.images;
+  const displayImages = activeColorObj?.images?.length > 0
+    ? [...activeColorObj.images]
+    : (defaultImages?.length > 0
+        ? [...defaultImages]
+        : [{ url: defaultImageUrl || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800" }]);
+  
+  displayImages.sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+  const images = displayImages;
 
   // Set default selected color when uniqueColors becomes available
   useEffect(() => {

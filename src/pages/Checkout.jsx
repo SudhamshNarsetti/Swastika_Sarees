@@ -61,18 +61,21 @@ export default function Checkout() {
       })
       .then(data => setSettings(data))
       .catch(err => console.error('Failed to load settings:', err));
+  }, []);
 
-    // Redirect to home if cart is empty
-    if (cart.length === 0) {
-      navigate('/cart');
-      return;
+  // Redirect if cart is empty or user is unauthenticated on mount/load
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate('/login?redirect=/checkout');
+        return;
+      }
+      if (cart.length === 0) {
+        navigate('/cart');
+      }
     }
-    
-    // Check if user is not authenticated after initial load
-    if (!user && !loading) {
-      navigate('/login?redirect=/checkout');
-    }
-  }, [cart, user, loading, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading, navigate]);
 
   // Load user profile details if logged in
   useEffect(() => {
